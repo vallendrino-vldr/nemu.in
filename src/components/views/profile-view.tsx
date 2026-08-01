@@ -1,5 +1,7 @@
 'use client'
 
+import * as React from 'react'
+
 import { useTranslations } from 'next-intl'
 import { LogOut, Zap } from 'lucide-react'
 
@@ -9,7 +11,7 @@ import { ThemeToggle } from '@/components/theme-toggle'
 import { LocaleSwitch } from '@/components/locale-switch'
 import { signOut } from '@/actions/auth'
 import { useCreditStore } from '@/store/credit-store'
-import { useLeadStore, selectSellable } from '@/store/lead-store'
+import { useLeadStore, sellableOf } from '@/store/lead-store'
 import { CREDIT_COST } from '@/lib/pricing'
 import { initialsOf } from '@/lib/utils'
 import type { Profile } from '@/lib/database.types'
@@ -19,7 +21,8 @@ export function ProfileView({ profile }: { profile: Profile }) {
   const tCredits = useTranslations('credits')
 
   const balance = useCreditStore((state) => state.balance)
-  const leads = useLeadStore(selectSellable)
+  const allLeads = useLeadStore((state) => state.leads)
+  const leads = React.useMemo(() => sellableOf(allLeads), [allLeads])
   const waReady = leads.filter((lead) => lead.contact_tier === 'whatsapp').length
 
   const unlimited = profile.role === 'super_admin'

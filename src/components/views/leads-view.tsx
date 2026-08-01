@@ -7,7 +7,7 @@ import { Inbox } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Panel } from '@/components/ui/primitives'
 import { LeadCard } from '@/components/lead-card'
-import { useLeadStore, selectSellable, selectVisible } from '@/store/lead-store'
+import { useLeadStore, sellableOf, visibleOf } from '@/store/lead-store'
 import type { ContactTierDb } from '@/lib/database.types'
 
 /**
@@ -24,10 +24,14 @@ export function LeadsView() {
   const t = useTranslations('leads')
   const tLead = useTranslations('lead')
 
-  const visible = useLeadStore(selectVisible)
-  const sellable = useLeadStore(selectSellable)
+  // Raw state only — see the note in lead-store.ts. Deriving inside the
+  // selector is what crashed this tab.
+  const leads = useLeadStore((state) => state.leads)
   const filter = useLeadStore((state) => state.filter)
   const setFilter = useLeadStore((state) => state.setFilter)
+
+  const sellable = React.useMemo(() => sellableOf(leads), [leads])
+  const visible = React.useMemo(() => visibleOf(leads, filter), [leads, filter])
 
   const [limit, setLimit] = React.useState(PAGE)
 

@@ -7,9 +7,20 @@ import type { Lead } from '@/lib/database.types'
  * One list of leads, shared by every tab.
  *
  * Hunt writes into it, Leads reads it, Map plots it, and an AI score paid
- * for in one tab is visible in the others immediately. Without this the
- * tabs would each hold their own copy and drift apart the moment the user
- * spent a credit.
+ * for in one tab is visible in the others immediately.
+ *
+ * ── WHY THERE ARE NO ARRAY-RETURNING SELECTORS HERE ──
+ * Zustand v5 subscribes through useSyncExternalStore, which requires the
+ * snapshot a selector returns to be referentially stable. A selector
+ * shaped like `state => state.leads.filter(...)` builds a fresh array on
+ * every call, so React sees the store change on every render and loops
+ * until it throws "Maximum update depth exceeded".
+ *
+ * That is not theoretical — it took down exactly the three tabs that used
+ * such selectors (Archive, Account, Map) while Hunt and God Mode, which
+ * do not, kept working. Derivation now happens in the components with
+ * useMemo, and everything exported from here returns either raw state or
+ * a primitive.
  */
 interface LeadState {
   leads: Lead[]
@@ -53,18 +64,24 @@ export const useLeadStore = create<LeadState>((set) => ({
   focus: (focused) => set({ focused }),
 }))
 
-/** Leads worth showing: a business that already has a website is not a lead. */
-export const selectSellable = (state: LeadState) =>
-  state.leads.filter((lead) => lead.contact_tier !== 'served')
+// ── Pure derivations ─────────────────────────────────────────────────
+// Plain functions over an array, called from useMemo in the component.
+// Never pass these to useLeadStore().
 
-export const selectVisible = (state: LeadState) => {
-  const sellable = selectSellable(state)
-  return state.filter ? sellable.filter((lead) => lead.contact_tier === state.filter) : sellable
+/** Leads worth showing: nobody buys a website they already have. */
+export function sellableOf(leads: Lead[]): Lead[] {
+  return leads.filter((lead) => lead.contact_tier !== 'served')
 }
 
-/** Only leads with coordinates can be drawn on the map. */
-export const selectMappable = (state: LeadState) =>
-  selectSellable(state).filter(
+export function visibleOf(leads: Lead[], filter: Lead['contact_tier'] | null): Lead[] {
+  const sellable = sellableOf(leads)
+  return filter ? sellable.filter((lead) => lead.contact_tier === filter) : sellable
+}
+
+/** Only leads with coordinates can be drawn on a map. */
+export function mappableOf(leads: Lead[]): Array<Lead & { lat: number; lng: number }> {
+  return sellableOf(leads).filter(
     (lead): lead is Lead & { lat: number; lng: number } =>
       typeof lead.lat === 'number' && typeof lead.lng === 'number',
   )
+}

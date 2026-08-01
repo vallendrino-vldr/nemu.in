@@ -8,7 +8,7 @@ import type { Map as MapboxMap, GeoJSONSource } from 'mapbox-gl'
 import { Badge, Panel } from '@/components/ui/primitives'
 import { Button } from '@/components/ui/button'
 import { LeadCard } from '@/components/lead-card'
-import { useLeadStore, selectMappable } from '@/store/lead-store'
+import { useLeadStore, mappableOf } from '@/store/lead-store'
 import { haptic } from '@/lib/haptics'
 import type { ContactTierDb, Lead } from '@/lib/database.types'
 
@@ -67,7 +67,8 @@ export function MapView() {
   const t = useTranslations('map')
   const { resolvedTheme } = useTheme()
 
-  const leads = useLeadStore(selectMappable)
+  const allLeads = useLeadStore((state) => state.leads)
+  const leads = React.useMemo(() => mappableOf(allLeads), [allLeads])
   const focused = useLeadStore((state) => state.focused)
   const focus = useLeadStore((state) => state.focus)
 
