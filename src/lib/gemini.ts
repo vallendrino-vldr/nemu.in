@@ -44,9 +44,14 @@ const thinkingUnsupported = new Set<string>()
 
 function getSlots(): KeySlot[] {
   if (slots) return slots
+  // Every GEMINI_API_KEY_* variable joins the rotation. Adding a fourth
+  // key is an env change, not a code change — free-tier limits are per
+  // key, so each one added is another whole quota.
   const configured: Array<[string, string | undefined]> = [
     ['primary', process.env.GEMINI_API_KEY_PRIMARY],
     ['secondary', process.env.GEMINI_API_KEY_SECONDARY],
+    ['tertiary', process.env.GEMINI_API_KEY_TERTIARY],
+    ['quaternary', process.env.GEMINI_API_KEY_QUATERNARY],
   ]
   slots = configured
     .filter((entry): entry is [string, string] => Boolean(entry[1]))

@@ -55,7 +55,11 @@
     "mockPoint1": "Dipercaya {count} pelanggan yang sudah kasih ulasan",
     "mockPoint2": "Rating {rating} dari 5 di Google Maps",
     "mockPoint3": "Lokasi strategis di {area}",
-    "watermark": "Contoh dibuat otomatis oleh Nemu.in"
+    "watermark": "Contoh dibuat otomatis oleh Nemu.in",
+    "mockPoint4": "Spesialis {category} yang sudah dikenal warga sekitar",
+    "mockPoint5": "Pesanan bisa langsung lewat WhatsApp, tanpa antre",
+    "mockPoint6": "Buka setiap hari dengan jam yang konsisten",
+    "mockPoint7": "Harga jelas di depan, tanpa biaya tersembunyi"
   },
   "auth": {
     "title": "Masuk sebentar, biar kreditnya nempel di akunmu",
@@ -143,7 +147,10 @@
     "tierPhone": "Telepon saja",
     "tierVisit": "Datangi / cari IG-nya",
     "callCta": "Telepon",
-    "noPhoneHint": "Nomornya belum terdaftar. Cek lokasinya di Maps, atau cari akun Instagram-nya."
+    "noPhoneHint": "Nomornya belum terdaftar. Cek lokasinya di Maps, atau cari akun Instagram-nya.",
+    "delete": "Hapus",
+    "deleteConfirm": "Hapus lead ini?",
+    "deleted": "Lead dihapus."
   },
   "pitch": {
     "title": "Pesan pembuka buat {name}",
@@ -253,7 +260,13 @@
     "emptyTitle": "Arsipmu masih kosong.",
     "emptyBody": "Buka tab Berburu, sebutkan jenis usaha dan kotanya. Hasilnya otomatis masuk ke sini.",
     "noneInFilter": "Tidak ada yang cocok dengan saringan ini.",
-    "loadMore": "Tampilkan {remaining} lagi"
+    "loadMore": "Tampilkan {remaining} lagi",
+    "clearAll": "Bersihkan semua",
+    "clearAllConfirm": "Hapus {count} lead di saringan ini? Tidak bisa dibatalkan.",
+    "cleared": "{count} lead dihapus.",
+    "selectMode": "Pilih",
+    "cancelSelect": "Batal",
+    "deleteSelected": "Hapus {count}"
   },
   "profile": {
     "roleAdmin": "Super Admin",

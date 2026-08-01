@@ -142,6 +142,24 @@ terbatas dan cache membuat pencarian berulang gratis.
 
 ## 6. PEKERJAAN BERIKUTNYA — prioritas pemilik
 
+### 6.0 God Mode: pisahkan halaman & beri kekuatan penuh (BESAR)
+Pemilik ingin: masuk seperti pengguna biasa, lalu satu ikon admin membuka
+**halaman terpisah** dengan kekuatan penuh. Saat ini God Mode adalah tab
+biasa yang isinya minim.
+
+Yang diminta: hapus akun user, ban, kirim peringatan, tambah/ganti API
+key Gemini dari UI, dan saldo admin yang terlihat serta bisa
+ditambah/dikurangi sendiri (pemilik memakai akunnya sendiri sebagai
+penguji, jadi dia perlu melihat kredit benar-benar berkurang).
+
+Catatan performa: membuka tab God bisa makan 7 detik karena
+`loadGodStats` menjalankan empat agregat sekaligus. Pindahkan ke satu
+RPC Postgres, atau muat bertahap.
+
+Catatan desain: kredit admin sekarang tampil `∞` dan tidak pernah
+berkurang (`consume_credits` mem-bypass super_admin). Untuk mode
+penguji, tambahkan sakelar "tagih saya seperti user biasa".
+
 ### 6.1 Rombak visual dashboard (PALING MENDESAK)
 Penilaian pemilik, kata-katanya sendiri: *"berantakan, murahan, ga
 berkelas, ga fresh, ga profesional, terlalu generik, AI SLOP, warnanya
@@ -174,6 +192,14 @@ dikerjakan pemilik. Pemilik baru saja membuat OAuth client baru; pastikan
 redirect URI-nya persis
 `https://nrkfweqncdvjgmpstzph.supabase.co/auth/v1/callback`.
 
+### 6.2b Audit mendalam menghasilkan output kacau
+Laporan pemilik: hasilnya error / tidak berfungsi. Belum didiagnosis.
+Dugaan awal: `deepAudit` memakai `thinking: true` dengan
+`maxOutputTokens: 1_400`; model 3.5 menghabiskan anggaran untuk berpikir
+lalu terpotong (gejala MAX_TOKENS yang sama seperti di §4). Coba naikkan
+anggaran token atau matikan thinking, lalu uji dengan memanggil
+Server Action lewat HTTP seperti di §7.
+
 ### 6.3 Verifikasi fitur berbayar di produksi
 Belum pernah terbukti jalan end-to-end di produksi: sapuan, skor AI,
 tulis pesan, peta. Kodenya benar dan API-nya teruji satu per satu, tapi
@@ -183,6 +209,8 @@ rangkaian penuhnya belum. Lakukan begitu env Vercel lengkap.
 - `signUpWithEmail` memakai Admin API karena SMTP belum ada. Kalau nanti
   SMTP dipasang, pindah ke `signUp()` biasa + konfirmasi email, lalu
   longgarkan rate limit.
+- Tab Arsip masih tampak berantakan menurut pemilik; hapus per-lead dan
+  bersihkan-semua sudah ada, tapi tata letaknya belum dirombak.
 - Sandi pemilik saat ini lemah dan harus diganti sebelum aplikasi dipakai
   orang lain.
 - `.agents/`, `.claude/`, `skills-lock.json` sengaja di-gitignore.

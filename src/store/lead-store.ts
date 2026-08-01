@@ -33,6 +33,7 @@ interface LeadState {
   /** New results on top, existing cards keep their paid-for AI fields. */
   merge: (incoming: Lead[]) => void
   patch: (id: string, changes: Partial<Lead>) => void
+  remove: (ids: string[]) => void
   setFilter: (tier: Lead['contact_tier'] | null) => void
   focus: (id: string | null) => void
 }
@@ -59,6 +60,15 @@ export const useLeadStore = create<LeadState>((set) => ({
     set((state) => ({
       leads: state.leads.map((lead) => (lead.id === id ? { ...lead, ...changes } : lead)),
     })),
+
+  remove: (ids) =>
+    set((state) => {
+      const gone = new Set(ids)
+      return {
+        leads: state.leads.filter((lead) => !gone.has(lead.id)),
+        focused: state.focused && gone.has(state.focused) ? null : state.focused,
+      }
+    }),
 
   setFilter: (filter) => set({ filter }),
   focus: (focused) => set({ focused }),

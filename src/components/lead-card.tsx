@@ -15,6 +15,7 @@ import {
   Sparkles,
   Star,
   Stethoscope,
+  Trash2,
 } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
@@ -22,7 +23,14 @@ import { Badge, Panel } from '@/components/ui/primitives'
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'
 import { GhostSite } from '@/components/ghost-site'
 import { usePaidAction } from '@/hooks/use-paid-action'
-import { deepAuditAction, markContacted, scoreLeadAction, writePitchAction } from '@/actions/enrich'
+import {
+  deepAuditAction,
+  deleteLeads,
+  markContacted,
+  scoreLeadAction,
+  writePitchAction,
+} from '@/actions/enrich'
+import { useLeadStore } from '@/store/lead-store'
 import { CREDIT_COST } from '@/lib/pricing'
 import { haptic } from '@/lib/haptics'
 import { cn } from '@/lib/utils'
@@ -36,6 +44,25 @@ export function LeadCard({ lead: initial, index = 0 }: { lead: Lead; index?: num
 
   const [lead, setLead] = React.useState(initial)
   const [ghostOpen, setGhostOpen] = React.useState(false)
+  const [confirmDelete, setConfirmDelete] = React.useState(false)
+  const removeFromStore = useLeadStore((state) => state.remove)
+
+  /**
+   * Two taps, not a dialog. A modal for a single reversible-by-re-sweeping
+   * row is heavier than the action deserves; arming the button in place
+   * still makes an accidental tap impossible.
+   */
+  const handleDelete = async () => {
+    if (!confirmDelete) {
+      setConfirmDelete(true)
+      window.setTimeout(() => setConfirmDelete(false), 3_000)
+      return
+    }
+    haptic('reject')
+    removeFromStore([lead.id])
+    void deleteLeads([lead.id])
+    toast.success(t('deleted'))
+  }
 
   const unserved = !lead.website
   const tier = lead.contact_tier
@@ -225,6 +252,16 @@ export function LeadCard({ lead: initial, index = 0 }: { lead: Lead; index?: num
               </a>
             </Button>
           ) : null}
+
+          <Button
+            variant={confirmDelete ? 'danger' : 'ghost'}
+            size="sm"
+            onClick={handleDelete}
+            className="ml-auto"
+          >
+            <Trash2 className="h-3.5 w-3.5" strokeWidth={2.4} />
+            {confirmDelete ? t('deleteConfirm') : t('delete')}
+          </Button>
         </div>
 
         {/* Generated pitch */}

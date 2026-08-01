@@ -55,7 +55,11 @@
     "mockPoint1": "Trusted by {count} customers who left a review",
     "mockPoint2": "Rated {rating} out of 5 on Google Maps",
     "mockPoint3": "Prime location in {area}",
-    "watermark": "Sample generated automatically by Nemu.in"
+    "watermark": "Sample generated automatically by Nemu.in",
+    "mockPoint4": "A {category} the neighbourhood already knows",
+    "mockPoint5": "Order straight through WhatsApp, no queue",
+    "mockPoint6": "Open daily, consistent hours",
+    "mockPoint7": "Clear pricing up front, no hidden fees"
   },
   "auth": {
     "title": "Quick sign-in, so your credits stick to your account",
@@ -143,7 +147,10 @@
     "tierPhone": "Landline only",
     "tierVisit": "Visit / find their IG",
     "callCta": "Call",
-    "noPhoneHint": "No number listed. Check the location on Maps, or look up their Instagram."
+    "noPhoneHint": "No number listed. Check the location on Maps, or look up their Instagram.",
+    "delete": "Delete",
+    "deleteConfirm": "Delete this lead?",
+    "deleted": "Lead deleted."
   },
   "pitch": {
     "title": "Opener for {name}",
@@ -253,7 +260,13 @@
     "emptyTitle": "Your archive is empty.",
     "emptyBody": "Open the Hunt tab, name a trade and a city. Results land here automatically.",
     "noneInFilter": "Nothing matches this filter.",
-    "loadMore": "Show {remaining} more"
+    "loadMore": "Show {remaining} more",
+    "clearAll": "Clear all",
+    "clearAllConfirm": "Delete {count} leads in this filter? This cannot be undone.",
+    "cleared": "{count} leads deleted.",
+    "selectMode": "Select",
+    "cancelSelect": "Cancel",
+    "deleteSelected": "Delete {count}"
   },
   "profile": {
     "roleAdmin": "Super Admin",

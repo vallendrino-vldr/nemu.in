@@ -236,3 +236,31 @@ export async function markContacted(leadId: string): Promise<ActionResult<null>>
 
   return succeed(null)
 }
+
+/**
+ * Deletes leads the user no longer wants.
+ *
+ * An archive that only ever grows is a junk drawer: the whole point of
+ * the filter chips is to find work, and dead entries make that harder
+ * every sweep. Scoped to the caller's own rows by both the where clause
+ * and RLS, so one user can never clear another's archive.
+ */
+export async function deleteLeads(ids: string[]): Promise<ActionResult<{ removed: number }>> {
+  const supabase = await getServerClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user) return fail('auth')
+
+  const targets = ids.filter((id) => typeof id === 'string' && id.length > 0).slice(0, 500)
+  if (targets.length === 0) return succeed({ removed: 0 })
+
+  const { error } = await supabase
+    .from('leads')
+    .delete()
+    .eq('user_id', user.id)
+    .in('id', targets)
+
+  if (error) return fail('unknown')
+  return succeed({ removed: targets.length })
+}

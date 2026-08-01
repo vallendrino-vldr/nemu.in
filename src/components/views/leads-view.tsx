@@ -2,12 +2,15 @@
 
 import * as React from 'react'
 import { useTranslations } from 'next-intl'
-import { Inbox } from 'lucide-react'
+import { Inbox, Trash2 } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import { Panel } from '@/components/ui/primitives'
 import { LeadCard } from '@/components/lead-card'
 import { useLeadStore, sellableOf, visibleOf } from '@/store/lead-store'
+import { deleteLeads } from '@/actions/enrich'
+import { toast } from 'sonner'
+import { haptic } from '@/lib/haptics'
 import type { ContactTierDb } from '@/lib/database.types'
 
 /**
@@ -34,6 +37,27 @@ export function LeadsView() {
   const visible = React.useMemo(() => visibleOf(leads, filter), [leads, filter])
 
   const [limit, setLimit] = React.useState(PAGE)
+  const [armed, setArmed] = React.useState(false)
+  const removeFromStore = useLeadStore((state) => state.remove)
+
+  /**
+   * Clears whatever the current filter shows — not the whole archive.
+   * Wiping 300 rows when the user was looking at the 5 dead ones would be
+   * the kind of destructive surprise that stops people trusting a button.
+   */
+  const clearVisible = async () => {
+    if (!armed) {
+      setArmed(true)
+      window.setTimeout(() => setArmed(false), 4_000)
+      return
+    }
+    const ids = visible.map((lead) => lead.id)
+    haptic('reject')
+    removeFromStore(ids)
+    setArmed(false)
+    void deleteLeads(ids)
+    toast.success(t('cleared', { count: ids.length }))
+  }
 
   // A filter change should always start from the top of the new list.
   React.useEffect(() => setLimit(PAGE), [filter])
@@ -86,6 +110,18 @@ export function LeadsView() {
           </Button>
         ))}
       </div>
+
+      {visible.length > 0 ? (
+        <Button
+          variant={armed ? 'danger' : 'ghost'}
+          size="sm"
+          onClick={clearVisible}
+          className="w-full"
+        >
+          <Trash2 className="h-3.5 w-3.5" strokeWidth={2.3} />
+          {armed ? t('clearAllConfirm', { count: visible.length }) : t('clearAll')}
+        </Button>
+      ) : null}
 
       {visible.length === 0 ? (
         <Panel pad="lg" className="text-center">

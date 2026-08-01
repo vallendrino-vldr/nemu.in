@@ -102,13 +102,7 @@ export function GhostSite({ subject }: { subject: GhostSubject }) {
         <div className="bg-surface-raised px-6 pb-9 pt-8 sm:px-9">
           <h4 className="text-base font-bold text-ink">{t('mockSectionTitle')}</h4>
           <ul className="mt-4 space-y-3">
-            {[
-              subject.reviewCount
-                ? t('mockPoint1', { count: subject.reviewCount })
-                : t('mockPoint3', { area: subject.area ?? 'Indonesia' }),
-              subject.rating ? t('mockPoint2', { rating: subject.rating.toFixed(1) }) : t('mockPoint3', { area: subject.area ?? 'Indonesia' }),
-              t('mockPoint3', { area: subject.area ?? 'Indonesia' }),
-            ].map((line, index) => (
+            {sellingPoints(subject, t).map((line, index) => (
               <li key={index} className="flex items-start gap-3 text-[0.8125rem] leading-relaxed text-ink-soft">
                 <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full" style={{ background: accent }} />
                 {line}
@@ -143,6 +137,39 @@ export function GhostSite({ subject }: { subject: GhostSubject }) {
       </div>
     </div>
   )
+}
+
+/**
+ * Selling points for the mock site.
+ *
+ * The first version picked one of three sentences per slot with the area
+ * line as the fallback for each — so a lead with no rating and no review
+ * count rendered "Lokasi strategis di Makasar" three times in a row. On a
+ * page whose entire job is to look like a real website, that is worse
+ * than showing fewer bullets.
+ *
+ * Now every claim is only added when the data behind it exists, generic
+ * copy fills the remainder, and the list is deduplicated before it can
+ * reach the screen.
+ */
+function sellingPoints(
+  subject: GhostSubject,
+  t: ReturnType<typeof useTranslations<'ghost'>>,
+): string[] {
+  const points: string[] = []
+
+  if (subject.reviewCount > 0) points.push(t('mockPoint1', { count: subject.reviewCount }))
+  if (subject.rating) points.push(t('mockPoint2', { rating: subject.rating.toFixed(1) }))
+  if (subject.area) points.push(t('mockPoint3', { area: subject.area }))
+  if (subject.category) points.push(t('mockPoint4', { category: subject.category.toLowerCase() }))
+
+  // Generic-but-true lines, used only to reach three bullets.
+  for (const filler of [t('mockPoint5'), t('mockPoint6'), t('mockPoint7')]) {
+    if (points.length >= 3) break
+    points.push(filler)
+  }
+
+  return Array.from(new Set(points)).slice(0, 3)
 }
 
 function Stat({ value, label, starred }: { value: string; label: string; starred?: boolean }) {
