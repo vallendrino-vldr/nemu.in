@@ -4,6 +4,7 @@ import { ShieldHalf } from 'lucide-react'
 import { Link } from '@/i18n/routing'
 import { Button } from '@/components/ui/button'
 import { CreditMeter } from '@/components/credit-meter'
+import { SafeWidget } from '@/components/safe-widget'
 import { ThemeToggle } from '@/components/theme-toggle'
 import { LocaleSwitch } from '@/components/locale-switch'
 import { signOut } from '@/actions/auth'
@@ -31,12 +32,14 @@ export async function SiteHeader({ profile }: { profile: Profile | null }) {
 
         {profile ? (
           <>
-            <CreditMeter
-              userId={profile.id}
-              initialBalance={profile.credits}
-              role={profile.role}
-              className="hidden sm:inline-flex"
-            />
+            <SafeWidget label="credit-meter">
+              <CreditMeter
+                userId={profile.id}
+                initialBalance={profile.credits}
+                role={profile.role}
+                className="hidden sm:inline-flex"
+              />
+            </SafeWidget>
 
             {profile.role === 'super_admin' ? (
               <Button variant="sunken" size="icon" asChild aria-label={t('godMode')}>
@@ -69,7 +72,9 @@ export async function SiteHeader({ profile }: { profile: Profile | null }) {
       {/* Mobile wallet row — the balance is too important to hide behind a menu. */}
       {profile ? (
         <div className="container flex justify-end pb-2.5 sm:hidden">
-          <CreditMeter userId={profile.id} initialBalance={profile.credits} role={profile.role} />
+          <SafeWidget label="credit-meter">
+            <CreditMeter userId={profile.id} initialBalance={profile.credits} role={profile.role} />
+          </SafeWidget>
         </div>
       ) : null}
     </header>

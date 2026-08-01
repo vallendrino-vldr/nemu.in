@@ -41,33 +41,61 @@ export function CreditMeter({ userId, initialBalance, role, className }: CreditM
     hydrate(initialBalance, role)
   }, [hydrate, initialBalance, role])
 
+  /**
+   * The live balance is a luxury, not a requirement.
+   *
+   * This opens a WebSocket to a third-party origin, and hardened browsers
+   * — Brave with shields up is the one that caught us — refuse exactly
+   * that. When the refusal threw inside this effect there was no boundary
+   * between it and the route, so a blocked socket painted the global
+   * error screen over a page whose server render was perfectly fine, on
+   * every screen the user could reach while signed in.
+   *
+   * Everything here is now best-effort. Lose the socket and you lose live
+   * updates; the number still renders, and every paid action reconciles
+   * the balance from its own server response anyway.
+   */
   React.useEffect(() => {
-    const supabase = getBrowserClient()
+    let channel: ReturnType<ReturnType<typeof getBrowserClient>['channel']> | null = null
+    let supabase: ReturnType<typeof getBrowserClient> | null = null
 
-    const channel = supabase
-      .channel(`wallet:${userId}`)
-      .on(
-        'postgres_changes',
-        { event: 'UPDATE', schema: 'public', table: 'profiles', filter: `id=eq.${userId}` },
-        (payload) => {
-          const next = (payload.new as Profile).credits
-          const rect = badgeRef.current?.getBoundingClientRect()
-          const origin = rect
-            ? { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 }
-            : undefined
+    try {
+      supabase = getBrowserClient()
+      channel = supabase
+        .channel(`wallet:${userId}`)
+        .on(
+          'postgres_changes',
+          { event: 'UPDATE', schema: 'public', table: 'profiles', filter: `id=eq.${userId}` },
+          (payload) => {
+            try {
+              const next = (payload.new as Profile).credits
+              const rect = badgeRef.current?.getBoundingClientRect()
+              const origin = rect
+                ? { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 }
+                : undefined
 
-          const previous = useCreditStore.getState().balance
-          reconcile(next, origin)
+              const previous = useCreditStore.getState().balance
+              reconcile(next, origin)
 
-          if (next > previous) haptic('receive')
-          setPulsing(true)
-          window.setTimeout(() => setPulsing(false), 420)
-        },
-      )
-      .subscribe()
+              if (next > previous) haptic('receive')
+              setPulsing(true)
+              window.setTimeout(() => setPulsing(false), 420)
+            } catch {
+              /* a malformed payload must not take the header down */
+            }
+          },
+        )
+        .subscribe()
+    } catch (error) {
+      console.warn('[credit-meter] realtime unavailable:', (error as Error)?.message)
+    }
 
     return () => {
-      void supabase.removeChannel(channel)
+      try {
+        if (supabase && channel) void supabase.removeChannel(channel)
+      } catch {
+        /* already torn down */
+      }
     }
   }, [userId, reconcile])
 

@@ -33,18 +33,31 @@ export function GodConsole({ initialStats, initialUsers }: GodConsoleProps) {
    * the injection on Realtime rather than on a refetch.
    */
   React.useEffect(() => {
-    const supabase = getBrowserClient()
-    const channel = supabase
-      .channel('god:profiles')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'profiles' }, (payload) => {
-        const next = payload.new as Profile
-        if (!next?.id) return
-        setUsers((prev) => prev.map((row) => (row.id === next.id ? { ...row, ...next } : row)))
-      })
-      .subscribe()
+    // Same treatment as the credit meter: a blocked WebSocket costs live
+    // updates, never the screen. The list still loads over HTTP.
+    let supabase: ReturnType<typeof getBrowserClient> | null = null
+    let channel: ReturnType<ReturnType<typeof getBrowserClient>['channel']> | null = null
+
+    try {
+      supabase = getBrowserClient()
+      channel = supabase
+        .channel('god:profiles')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'profiles' }, (payload) => {
+          const next = payload.new as Profile
+          if (!next?.id) return
+          setUsers((prev) => prev.map((row) => (row.id === next.id ? { ...row, ...next } : row)))
+        })
+        .subscribe()
+    } catch (error) {
+      console.warn('[god] realtime unavailable:', (error as Error)?.message)
+    }
 
     return () => {
-      void supabase.removeChannel(channel)
+      try {
+        if (supabase && channel) void supabase.removeChannel(channel)
+      } catch {
+        /* already torn down */
+      }
     }
   }, [])
 

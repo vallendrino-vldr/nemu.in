@@ -89,7 +89,9 @@ export function AppShell({ profile, initialLeads }: AppShellProps) {
           </span>
         </div>
 
-        <CreditMeter userId={profile.id} initialBalance={profile.credits} role={profile.role} />
+        <SafeWidget label="credit-meter">
+          <CreditMeter userId={profile.id} initialBalance={profile.credits} role={profile.role} />
+        </SafeWidget>
       </header>
 
       {/* ── The only scrolling region in the app. ───────────────────── */}
