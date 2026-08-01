@@ -2,7 +2,7 @@
 
 import * as React from 'react'
 import { useTranslations } from 'next-intl'
-import { RotateCcw, Unplug } from 'lucide-react'
+import { Eraser, RotateCcw, Unplug } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import { Panel } from '@/components/ui/primitives'
@@ -25,6 +25,23 @@ export default function LocaleError({
     console.error('[nemu] render failed', error)
   }, [error])
 
+  /** Unregisters every service worker, empties every cache, reloads clean. */
+  const hardReset = async () => {
+    try {
+      if ('serviceWorker' in navigator) {
+        const registrations = await navigator.serviceWorker.getRegistrations()
+        await Promise.all(registrations.map((registration) => registration.unregister()))
+      }
+      if ('caches' in window) {
+        const names = await caches.keys()
+        await Promise.all(names.map((name) => caches.delete(name)))
+      }
+    } catch {
+      // Even a partial teardown is better than none; reload regardless.
+    }
+    window.location.replace('/')
+  }
+
   return (
     <div className="container grid min-h-svh place-items-center py-16">
       <Panel pad="lg" className="w-full max-w-md text-center">
@@ -46,6 +63,17 @@ export default function LocaleError({
             <a href="/">{t('goHome')}</a>
           </Button>
         </div>
+
+        {/*
+          The escape hatch for a wedged install.
+          An installed PWA has no address bar, so a user stuck behind a
+          bad service worker or a stale cache has no way to force a clean
+          reload. This tears both down and reloads from the network.
+        */}
+        <Button variant="ghost" size="sm" className="mt-4" onClick={hardReset}>
+          <Eraser className="h-3.5 w-3.5" strokeWidth={2.3} />
+          {t('hardReset')}
+        </Button>
 
         {error.digest ? (
           <p className="mt-6 font-mono text-[0.625rem] text-ink-faint">ref · {error.digest}</p>

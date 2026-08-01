@@ -9,6 +9,7 @@ import { CreditMeter } from '@/components/credit-meter'
 import { HuntView } from '@/components/views/hunt-view'
 import { LeadsView } from '@/components/views/leads-view'
 import { MapView } from '@/components/views/map-view'
+import { SafeWidget } from '@/components/safe-widget'
 import { ProfileView } from '@/components/views/profile-view'
 import { GodView } from '@/components/views/god-view'
 import { useLeadStore } from '@/store/lead-store'
@@ -104,7 +105,11 @@ export function AppShell({ profile, initialLeads }: AppShellProps) {
           >
             {tab === 'hunt' ? <HuntView /> : null}
             {tab === 'leads' ? <LeadsView /> : null}
-            {tab === 'map' ? <MapView /> : null}
+            {tab === 'map' ? (
+              <SafeWidget label="map">
+                <MapView />
+              </SafeWidget>
+            ) : null}
             {tab === 'profile' ? <ProfileView profile={profile} /> : null}
             {tab === 'god' && isAdmin ? <GodView /> : null}
           </motion.div>

@@ -38,6 +38,7 @@ export function Globe({ className }: { className?: string }) {
   const canvasRef = React.useRef<HTMLCanvasElement>(null)
   const { resolvedTheme } = useTheme()
   const [mounted, setMounted] = React.useState(false)
+  const [unsupported, setUnsupported] = React.useState(false)
 
   // Drag state kept in refs: touching React state at 60fps would re-render
   // the whole hero on every pointer move.
@@ -51,6 +52,19 @@ export function Globe({ className }: { className?: string }) {
     if (!mounted || !canvasRef.current) return
 
     const canvas = canvasRef.current
+
+    // Brave and Firefox's strict modes can refuse a WebGL context as an
+    // anti-fingerprinting measure. Asking first — and bailing to the CSS
+    // fallback — is the difference between a missing ornament and a
+    // white screen, because cobe throws if it cannot get a context.
+    const probe =
+      canvas.getContext('webgl2', { failIfMajorPerformanceCaveat: false }) ??
+      canvas.getContext('webgl')
+    if (!probe) {
+      setUnsupported(true)
+      return
+    }
+
     const isDark = resolvedTheme === 'dark'
     const [basePhi, baseTheta] = focusAngles(INDONESIA.lat, INDONESIA.lng)
 
@@ -63,7 +77,9 @@ export function Globe({ className }: { className?: string }) {
     measure()
     window.addEventListener('resize', measure)
 
-    const globe = createGlobe(canvas, {
+    let globe: ReturnType<typeof createGlobe>
+    try {
+      globe = createGlobe(canvas, {
       devicePixelRatio: Math.min(window.devicePixelRatio, 2),
       width: width * 2,
       height: width * 2,
@@ -92,8 +108,15 @@ export function Globe({ className }: { className?: string }) {
         state.theta = baseTheta + Math.cos(frame / 420) * 0.02
         state.width = width * 2
         state.height = width * 2
-      },
-    })
+        },
+      })
+    } catch (error) {
+      // A refused or poisoned context surfaces here rather than as a
+      // blank page. The CSS fallback below takes over.
+      console.warn('[globe] WebGL unavailable:', (error as Error)?.message)
+      setUnsupported(true)
+      return
+    }
 
     // Fade in only once WebGL has actually painted something.
     const reveal = window.setTimeout(() => {
@@ -119,12 +142,19 @@ export function Globe({ className }: { className?: string }) {
           aria-hidden
           className="pointer-events-none absolute inset-[-12%] animate-aurora-drift rounded-full bg-hearth blur-2xl"
         />
+
+        {unsupported ? <GlobeFallback /> : null}
+
         <canvas
           ref={canvasRef}
           aria-label="Peta Indonesia"
           role="img"
           className="relative h-full w-full cursor-grab opacity-0 transition-opacity duration-700 ease-settle active:cursor-grabbing"
-          style={{ contain: 'layout paint size', touchAction: 'pan-y' }}
+          style={{
+            contain: 'layout paint size',
+            touchAction: 'pan-y',
+            display: unsupported ? 'none' : undefined,
+          }}
           onPointerDown={(event) => {
             pointerDownAt.current = event.clientX - dragOffset.current * 220
             event.currentTarget.setPointerCapture(event.pointerId)
@@ -140,6 +170,58 @@ export function Globe({ className }: { className?: string }) {
             dragOffset.current = (event.clientX - pointerDownAt.current) / 220
           }}
         />
+      </div>
+    </div>
+  )
+}
+
+/**
+ * What stands in when WebGL is refused — most often Brave with shields up.
+ *
+ * Pure CSS: a lit sphere with the same ember rim and the same city dots,
+ * placed by the same coordinates as the real markers. It is not the globe,
+ * but it is unmistakably the same object, and it cannot fail.
+ */
+function GlobeFallback() {
+  const project = (lat: number, lng: number) => ({
+    left: `${50 + ((lng - INDONESIA.lng) / 60) * 42}%`,
+    top: `${50 - ((lat - INDONESIA.lat) / 60) * 42}%`,
+  })
+
+  return (
+    <div aria-hidden className="absolute inset-0 grid place-items-center">
+      <div className="relative h-[86%] w-[86%] rounded-full bg-[radial-gradient(circle_at_32%_26%,hsl(36_30%_28%),hsl(24_16%_9%)_62%)] shadow-[inset_0_-18px_44px_hsl(24_30%_4%/0.85),0_0_70px_-14px_hsl(26_92%_51%/0.42)] dark:bg-[radial-gradient(circle_at_32%_26%,hsl(30_18%_22%),hsl(24_18%_6%)_62%)]">
+        {/* Grid lines, so it reads as a globe rather than a ball. */}
+        <div className="absolute inset-0 overflow-hidden rounded-full opacity-30">
+          {[22, 38, 50, 62, 78].map((top) => (
+            <span
+              key={top}
+              className="absolute inset-x-0 border-t border-ember-300/40"
+              style={{ top: `${top}%` }}
+            />
+          ))}
+          {[26, 42, 58, 74].map((left) => (
+            <span
+              key={left}
+              className="absolute inset-y-0 border-l border-ember-300/25"
+              style={{ left: `${left}%` }}
+            />
+          ))}
+        </div>
+
+        {CITY_MARKERS.map((marker) => {
+          const [lat, lng] = marker.location
+          return (
+            <span
+              key={`${lat},${lng}`}
+              className="absolute h-1.5 w-1.5 -translate-x-1/2 -translate-y-1/2 animate-ember-breathe rounded-full bg-ember-400 shadow-[0_0_10px_2px_hsl(26_92%_51%/0.75)]"
+              style={project(lat, lng)}
+            />
+          )
+        })}
+
+        {/* Specular highlight — the detail that makes it feel spherical. */}
+        <div className="absolute left-[24%] top-[18%] h-[26%] w-[34%] rounded-full bg-white/10 blur-xl" />
       </div>
     </div>
   )

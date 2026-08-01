@@ -18,7 +18,7 @@
  * the next page load rather than waiting for every tab to close.
  */
 
-const VERSION = 'nemu-v3'
+const VERSION = 'nemu-v4'
 const SHELL_CACHE = `${VERSION}-shell`
 const TILE_CACHE = `${VERSION}-tiles`
 const MAX_TILES = 400

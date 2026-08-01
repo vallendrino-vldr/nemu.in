@@ -212,7 +212,8 @@
     "notConfiguredTitle": "Kunci AI belum dipasang di server.",
     "notConfiguredBody": "Fitur ini butuh GEMINI_API_KEY di Environment Variables Vercel. Semua kredit dikembalikan.",
     "sessionTitle": "Sesimu habis.",
-    "sessionBody": "Masuk ulang sebentar, lalu coba lagi."
+    "sessionBody": "Masuk ulang sebentar, lalu coba lagi.",
+    "hardReset": "Bersihkan cache & muat ulang"
   },
   "common": {
     "cancel": "Batal",

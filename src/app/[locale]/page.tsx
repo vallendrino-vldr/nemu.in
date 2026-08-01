@@ -5,6 +5,7 @@ import { Link } from '@/i18n/routing'
 import { Button } from '@/components/ui/button'
 import { Badge, Eyebrow, Panel } from '@/components/ui/primitives'
 import { Globe } from '@/components/globe'
+import { SafeWidget } from '@/components/safe-widget'
 import { AuthPanel } from '@/components/auth-panel'
 import { SiteHeader } from '@/components/site-header'
 import { getSessionProfile } from '@/lib/supabase/server'
@@ -79,7 +80,13 @@ export default async function LandingPage({
               in, it goes back to being the globe. A login form the user
               has to scroll for is a login form they do not use. */}
           <div className="relative mx-auto w-full max-w-md lg:max-w-none">
-            {profile ? <Globe /> : <AuthPanel className="scroll-mt-24" id="masuk" />}
+            {profile ? (
+              <SafeWidget label="globe">
+                <Globe />
+              </SafeWidget>
+            ) : (
+              <AuthPanel className="scroll-mt-24" id="masuk" />
+            )}
           </div>
         </div>
       </section>
