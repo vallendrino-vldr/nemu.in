@@ -1,0 +1,276 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ══════════════════════════════════════════════════════════════════
+   PALETTE + PHYSICS
+   Light mode lights the scene from directly above: crisp white top
+   highlight, soft warm shadow below. Dark mode has no ambient light,
+   so the highlight drops to a whisper and the shadows do the lifting.
+   Every elevation below is authored as a single multi-layer string so
+   components never stack ad-hoc shadows on top of each other.
+   ══════════════════════════════════════════════════════════════════ */
+
+@layer base {
+  :root {
+    --canvas: 38 32% 95%;
+    --surface: 40 40% 98%;
+    --surface-raised: 0 0% 100%;
+    --surface-sunken: 36 24% 91%;
+    --hairline: 32 18% 85%;
+
+    --ink: 24 18% 11%;
+    --ink-soft: 24 9% 38%;
+    --ink-faint: 26 8% 56%;
+
+    --sheen: 0 0% 100%;
+    --void: 24 30% 10%;
+
+    --shadow-hairline: 0 0 0 1px hsl(var(--void) / 0.07);
+
+    --shadow-relief:
+      inset 0 1px 0 0 hsl(var(--sheen) / 0.95),
+      inset 0 -1px 1px 0 hsl(var(--void) / 0.05),
+      0 1px 1.5px -0.5px hsl(var(--void) / 0.09),
+      0 3px 6px -1.5px hsl(var(--void) / 0.08),
+      0 8px 18px -5px hsl(var(--void) / 0.09);
+
+    --shadow-relief-lg:
+      inset 0 1px 0 0 hsl(var(--sheen) / 0.95),
+      inset 0 -1.5px 1px 0 hsl(var(--void) / 0.06),
+      0 2px 3px -1px hsl(var(--void) / 0.08),
+      0 8px 16px -4px hsl(var(--void) / 0.10),
+      0 24px 48px -14px hsl(var(--void) / 0.14);
+
+    --shadow-pressed:
+      inset 0 2px 4px 0 hsl(var(--void) / 0.14),
+      inset 0 1px 1px 0 hsl(var(--void) / 0.10),
+      inset 0 -1px 0 0 hsl(var(--sheen) / 0.55),
+      0 1px 0 0 hsl(var(--sheen) / 0.6);
+
+    --shadow-well:
+      inset 0 2px 5px -1px hsl(var(--void) / 0.13),
+      inset 0 1px 1px 0 hsl(var(--void) / 0.07),
+      0 1px 0 0 hsl(var(--sheen) / 0.85);
+
+    --shadow-floating:
+      0 0 0 1px hsl(var(--void) / 0.06),
+      0 12px 24px -8px hsl(var(--void) / 0.14),
+      0 40px 80px -24px hsl(var(--void) / 0.22);
+
+    --shadow-ember-relief:
+      inset 0 1px 0 0 hsl(36 100% 78% / 0.9),
+      inset 0 -2px 2px 0 hsl(16 74% 26% / 0.4),
+      0 1px 2px 0 hsl(18 82% 30% / 0.28),
+      0 6px 14px -4px hsl(22 88% 42% / 0.42),
+      0 14px 30px -12px hsl(22 88% 42% / 0.45);
+
+    --shadow-ember-pressed:
+      inset 0 3px 6px 0 hsl(16 74% 24% / 0.48),
+      inset 0 -1px 0 0 hsl(36 100% 76% / 0.35);
+
+    --shadow-ember-glow: 0 0 0 1px hsl(26 92% 51% / 0.35), 0 0 28px -4px hsl(26 92% 51% / 0.5);
+
+    --grain-opacity: 0.5;
+  }
+
+  .dark {
+    --canvas: 24 14% 6%;
+    --surface: 24 12% 9%;
+    --surface-raised: 26 11% 13%;
+    --surface-sunken: 24 16% 4%;
+    --hairline: 28 8% 20%;
+
+    --ink: 36 34% 95%;
+    --ink-soft: 32 10% 66%;
+    --ink-faint: 30 7% 47%;
+
+    --sheen: 36 44% 86%;
+    --void: 0 0% 0%;
+
+    --shadow-hairline: 0 0 0 1px hsl(var(--sheen) / 0.07);
+
+    --shadow-relief:
+      inset 0 1px 0 0 hsl(var(--sheen) / 0.10),
+      inset 0 -1px 1px 0 hsl(var(--void) / 0.5),
+      0 1px 2px 0 hsl(var(--void) / 0.6),
+      0 5px 14px -4px hsl(var(--void) / 0.6),
+      0 14px 32px -12px hsl(var(--void) / 0.7);
+
+    --shadow-relief-lg:
+      inset 0 1px 0 0 hsl(var(--sheen) / 0.12),
+      inset 0 -1.5px 1px 0 hsl(var(--void) / 0.55),
+      0 2px 4px 0 hsl(var(--void) / 0.6),
+      0 12px 24px -6px hsl(var(--void) / 0.68),
+      0 32px 64px -18px hsl(var(--void) / 0.8);
+
+    --shadow-pressed:
+      inset 0 2px 6px 0 hsl(var(--void) / 0.8),
+      inset 0 1px 2px 0 hsl(var(--void) / 0.6),
+      inset 0 -1px 0 0 hsl(var(--sheen) / 0.07),
+      0 1px 0 0 hsl(var(--sheen) / 0.05);
+
+    --shadow-well:
+      inset 0 2px 6px -1px hsl(var(--void) / 0.75),
+      inset 0 1px 2px 0 hsl(var(--void) / 0.5),
+      0 1px 0 0 hsl(var(--sheen) / 0.07);
+
+    --shadow-floating:
+      0 0 0 1px hsl(var(--sheen) / 0.08),
+      0 16px 32px -10px hsl(var(--void) / 0.7),
+      0 48px 96px -28px hsl(var(--void) / 0.9);
+
+    --shadow-ember-relief:
+      inset 0 1px 0 0 hsl(36 100% 74% / 0.55),
+      inset 0 -2px 3px 0 hsl(15 68% 16% / 0.7),
+      0 1px 2px 0 hsl(var(--void) / 0.5),
+      0 8px 18px -5px hsl(22 88% 40% / 0.5),
+      0 18px 40px -14px hsl(22 88% 40% / 0.55);
+
+    --shadow-ember-pressed:
+      inset 0 3px 7px 0 hsl(15 68% 14% / 0.8),
+      inset 0 -1px 0 0 hsl(36 100% 70% / 0.25);
+
+    --shadow-ember-glow: 0 0 0 1px hsl(26 92% 51% / 0.45), 0 0 36px -4px hsl(26 92% 51% / 0.65);
+
+    --grain-opacity: 0.34;
+  }
+
+  * {
+    @apply border-hairline;
+  }
+
+  html {
+    -webkit-tap-highlight-color: transparent;
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-canvas font-sans text-ink antialiased;
+    text-rendering: optimizeLegibility;
+    font-feature-settings: 'cv02', 'cv03', 'cv04', 'ss01';
+    overscroll-behavior-y: none;
+  }
+
+  /* Film grain over the entire viewport. This is the single detail that
+     stops flat colour fields from reading as "generated in a browser". */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: -50%;
+    z-index: 9999;
+    pointer-events: none;
+    background-image: theme('backgroundImage.grain');
+    opacity: var(--grain-opacity);
+    mix-blend-mode: soft-light;
+    will-change: transform;
+  }
+
+  ::selection {
+    background: hsl(26 92% 51% / 0.28);
+    color: hsl(var(--ink));
+  }
+
+  :focus-visible {
+    outline: 2px solid hsl(26 92% 51% / 0.85);
+    outline-offset: 2px;
+    border-radius: 6px;
+  }
+
+  /* Numerals should never reflow while a counter animates. */
+  .tabular {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: 'tnum';
+  }
+
+  ::-webkit-scrollbar {
+    width: 11px;
+    height: 11px;
+  }
+  ::-webkit-scrollbar-track {
+    background: hsl(var(--surface-sunken));
+  }
+  ::-webkit-scrollbar-thumb {
+    background: hsl(var(--ink-faint) / 0.4);
+    border: 3px solid hsl(var(--surface-sunken));
+    border-radius: 999px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--ink-faint) / 0.66);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+@layer components {
+  /* A panel that sits on top of the canvas and catches light. */
+  .surface-relief {
+    @apply rounded-card bg-surface-raised bg-brushed shadow-relief;
+  }
+
+  /* A recess carved into a panel — inputs, code blocks, empty slots. */
+  .surface-well {
+    @apply rounded-well bg-surface-sunken shadow-well;
+  }
+
+  /* Hairline that reads as a seam between two machined parts rather than
+     a 1px CSS border. */
+  .seam {
+    box-shadow:
+      0 -1px 0 0 hsl(var(--void) / 0.06),
+      0 0 0 0 transparent,
+      0 1px 0 0 hsl(var(--sheen) / 0.7);
+  }
+
+  .dark .seam {
+    box-shadow:
+      0 -1px 0 0 hsl(var(--void) / 0.5),
+      0 1px 0 0 hsl(var(--sheen) / 0.07);
+  }
+
+  /* Loading placeholder with a light sweep, not a grey pulse. */
+  .shimmer-track {
+    @apply relative overflow-hidden bg-surface-sunken;
+  }
+  .shimmer-track::after {
+    content: '';
+    @apply absolute inset-0 -translate-x-full animate-shimmer;
+    background-image: linear-gradient(
+      90deg,
+      transparent,
+      hsl(var(--sheen) / 0.28),
+      transparent
+    );
+  }
+
+  .overline {
+    @apply text-overline font-semibold uppercase text-ink-faint;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+  .text-pretty {
+    text-wrap: pretty;
+  }
+  /* Promotes a control onto its own layer so the press animation never
+     causes a repaint of the surrounding card. */
+  .tactile {
+    will-change: transform, box-shadow;
+    transform: translateZ(0);
+  }
+  .mask-fade-b {
+    mask-image: linear-gradient(to bottom, black 62%, transparent 100%);
+  }
+}
