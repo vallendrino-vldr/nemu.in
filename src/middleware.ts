@@ -64,8 +64,20 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  // Static assets, the manifest and the service worker must never pass
-  // through here: a service worker delayed by an auth round trip cannot
-  // do its job of making the app feel instant.
-  matcher: ['/((?!api|_next|_vercel|manifest.webmanifest|sw.js|icon-.*|.*\\..*).*)'],
+  /**
+   * `auth` is excluded, and that exclusion is load-bearing.
+   *
+   * /auth/callback is the OAuth landing strip. It lives outside the
+   * [locale] segment because the redirect URI is registered once in the
+   * Google console and must never change shape. Running it through the
+   * next-intl middleware made that middleware try to give it a locale
+   * prefix, and the rewritten path matches no route — production was
+   * answering the Google callback with a flat 404, which no amount of
+   * fixing the provider secret would have cured.
+   *
+   * Static assets, the manifest and the service worker are excluded for
+   * a different reason: a service worker delayed by an auth round trip
+   * cannot do its job of making the app feel instant.
+   */
+  matcher: ['/((?!api|auth|_next|_vercel|manifest.webmanifest|sw.js|icon-.*|.*\\..*).*)'],
 }

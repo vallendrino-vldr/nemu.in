@@ -8,6 +8,18 @@ import type { Lead, Profile } from '@/lib/database.types'
 export const dynamic = 'force-dynamic'
 
 /**
+ * Server Actions inherit the containing page's duration budget, and a
+ * sweep queries two map providers before it can answer.
+ *
+ * Vercel's default is 10 seconds. Overpass alone routinely takes longer
+ * than that from a cold function, so the platform was killing the request
+ * mid-flight: the credit had already been charged, the refund never ran
+ * because the process was gone, and the browser saw only a dead socket —
+ * which is exactly the "everything fails with a generic error" symptom.
+ */
+export const maxDuration = 60
+
+/**
  * The only server work the app shell needs: who is this, and what did
  * they already collect. Everything after this is client-side, so tapping
  * between tabs costs nothing.

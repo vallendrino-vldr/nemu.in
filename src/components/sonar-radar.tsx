@@ -36,8 +36,15 @@ export function SonarRadar({
   className?: string
 }) {
   return (
-    <div className={cn('flex flex-col items-center gap-6 py-10', className)} role="status" aria-live="polite">
-      <div className="relative aspect-square w-56 sm:w-64">
+    // The ping rings scale to 2.4x their own box, so without clipping here
+    // they escape the panel and paint over whatever sits beside it — which
+    // is exactly the "radar berantakan, keluar kotak" symptom.
+    <div
+      className={cn('flex flex-col items-center gap-6 overflow-hidden px-4 py-10', className)}
+      role="status"
+      aria-live="polite"
+    >
+      <div className="relative aspect-square w-40 max-w-full sm:w-56">
         {/* Carved dish */}
         <div className="absolute inset-0 rounded-full bg-surface-sunken shadow-well" />
 
@@ -57,15 +64,17 @@ export function SonarRadar({
         <div aria-hidden className="absolute left-1/2 top-[8%] h-[84%] w-px -translate-x-1/2 bg-ember-500/12" />
         <div aria-hidden className="absolute top-1/2 left-[8%] h-px w-[84%] -translate-y-1/2 bg-ember-500/12" />
 
-        {/* Expanding pings */}
-        {[0, 0.85, 1.7].map((delay) => (
-          <div
-            key={delay}
-            aria-hidden
-            className="absolute inset-0 animate-sonar-ping rounded-full border-2 border-ember-500/55"
-            style={{ animationDelay: `${delay}s` }}
-          />
-        ))}
+        {/* Expanding pings, clipped to the dish so they fade at its rim
+            instead of sweeping across the surrounding layout. */}
+        <div aria-hidden className="absolute inset-0 overflow-hidden rounded-full">
+          {[0, 0.85, 1.7].map((delay) => (
+            <div
+              key={delay}
+              className="absolute inset-0 animate-sonar-ping rounded-full border-2 border-ember-500/55"
+              style={{ animationDelay: `${delay}s` }}
+            />
+          ))}
+        </div>
 
         {/* Sweep arm — a conic wedge, so the trailing edge fades like phosphor */}
         <div

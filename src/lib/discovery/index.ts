@@ -36,27 +36,50 @@ export function activeProviders(): string[] {
   return providers
 }
 
+/**
+ * How long the whole sweep may take before we answer with whatever has
+ * arrived. Overpass is public infrastructure and occasionally takes
+ * twenty seconds; the user should never wait that long, and the platform
+ * will kill the function before it finishes anyway.
+ */
+const SWEEP_BUDGET_MS = 20_000
+
+/** Resolves to [] instead of hanging past the budget. */
+function withBudget(
+  task: Promise<ProspectCandidate[]>,
+  label: string,
+): Promise<ProspectCandidate[]> {
+  return Promise.race([
+    task.catch((error) => {
+      console.warn(`[discovery] ${label} failed:`, (error as Error)?.message)
+      return [] as ProspectCandidate[]
+    }),
+    new Promise<ProspectCandidate[]>((resolve) =>
+      setTimeout(() => {
+        console.warn(`[discovery] ${label} exceeded ${SWEEP_BUDGET_MS}ms budget`)
+        resolve([])
+      }, SWEEP_BUDGET_MS),
+    ),
+  ])
+}
+
 export async function sweep(input: SweepInput): Promise<ProspectCandidate[]> {
   const tasks: Array<Promise<ProspectCandidate[]>> = []
 
   // Google Places, when funded, is strictly better data — but it never
   // suppresses the free sources, because merging only adds coverage.
-  if (process.env.GOOGLE_PLACES_API_KEY) tasks.push(sweepPlaces(input))
-  if (process.env.GEOAPIFY_API_KEY) tasks.push(sweepGeoapify(input))
-  tasks.push(sweepOverpass(input))
-
-  const settled = await Promise.allSettled(tasks)
-  const harvested = settled.flatMap((result) =>
-    result.status === 'fulfilled' ? result.value : [],
-  )
-
-  // Every source failing is a real outage; one source failing is a
-  // Tuesday, and the user should still get results.
-  if (harvested.length === 0) {
-    const firstRejection = settled.find((result) => result.status === 'rejected')
-    if (firstRejection && firstRejection.status === 'rejected') throw firstRejection.reason
-    return []
+  if (process.env.GOOGLE_PLACES_API_KEY) {
+    tasks.push(withBudget(sweepPlaces(input), 'google-places'))
   }
+  if (process.env.GEOAPIFY_API_KEY) {
+    tasks.push(withBudget(sweepGeoapify(input), 'geoapify'))
+  }
+  tasks.push(withBudget(sweepOverpass(input), 'overpass'))
+
+  // Every task already absorbs its own failure, so this settles fast and
+  // a single slow provider can no longer take the whole sweep down with
+  // it. Partial results beat a dead request.
+  const harvested = (await Promise.all(tasks)).flat()
 
   return rankAndDedupe(harvested, input.limit ?? 20)
 }

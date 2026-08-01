@@ -124,7 +124,7 @@ export async function sweepGeoapify({
   try {
     response = await fetch(url, {
       headers: { Accept: 'application/json' },
-      signal: AbortSignal.timeout(12_000),
+      signal: AbortSignal.timeout(9_000),
       cache: 'no-store',
     })
   } catch {
@@ -157,7 +157,7 @@ async function geocodeCity(city: string, apiKey: string): Promise<{ lat: number;
   url.searchParams.set('apiKey', apiKey)
 
   try {
-    const response = await fetch(url, { signal: AbortSignal.timeout(8_000), cache: 'no-store' })
+    const response = await fetch(url, { signal: AbortSignal.timeout(6_000), cache: 'no-store' })
     if (!response.ok) return null
     const payload = (await response.json()) as { features?: GeoapifyFeature[] }
     const props = payload.features?.[0]?.properties

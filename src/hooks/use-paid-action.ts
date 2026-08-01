@@ -83,8 +83,11 @@ function announce(failure: Failure, t: Translator) {
     case 'ai_busy':
       toast.error(t('aiBusyTitle'), { description: t('aiBusyBody') })
       return
+    case 'not_configured':
+      toast.error(t('notConfiguredTitle'), { description: t('notConfiguredBody') })
+      return
     case 'auth':
-      toast.error(t('genericTitle'), { description: t('genericBody') })
+      toast.error(t('sessionTitle'), { description: t('sessionBody') })
       return
     default:
       toast.error(t('genericTitle'), { description: t('genericBody') })

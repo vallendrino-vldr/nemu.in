@@ -87,9 +87,11 @@ export async function sweepForLeads(input: SweepInput): Promise<ActionResult<Swe
 
   // ── 2. Charge, then call ───────────────────────────────────────────
   let balance: number
+  let wasFree = false
   try {
     const charged = await charge(supabase, 'scrape', { query, city, radius: input.radiusMeters })
     balance = charged.balance
+    wasFree = charged.wasFree
   } catch (error) {
     if (error instanceof CreditError) {
       return fail('insufficient_credits', { needed: error.needed, have: error.have })
@@ -107,14 +109,14 @@ export async function sweepForLeads(input: SweepInput): Promise<ActionResult<Swe
       limit: LEADS_PER_SWEEP * 2,
     })
   } catch (error) {
-    await refund(user.id, 'scrape', 'discovery_failed')
+    await refund(user.id, 'scrape', 'discovery_failed', wasFree)
     if (error instanceof DiscoveryError && error.kind === 'quota') return fail('quota')
     return fail('unknown')
   }
 
   // ── 3. Empty radius is not the user's fault, so it is not their bill ──
   if (candidates.length === 0) {
-    await refund(user.id, 'scrape', 'empty_radius')
+    await refund(user.id, 'scrape', 'empty_radius', wasFree)
     return fail('empty', { suggestRadius: nextRadius(input.radiusMeters) ?? undefined })
   }
 

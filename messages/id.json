@@ -208,7 +208,11 @@
     "quotaTitle": "Kuota harian Google udah mentok.",
     "quotaBody": "Ini batas dari sananya, bukan dari kami. Reset tengah malam waktu Pasifik.",
     "aiBusyTitle": "AI-nya lagi antre panjang.",
-    "aiBusyBody": "Kami udah coba dua jalur dan dua-duanya penuh. Kreditmu gak jadi kepotong."
+    "aiBusyBody": "Kami udah coba dua jalur dan dua-duanya penuh. Kreditmu gak jadi kepotong.",
+    "notConfiguredTitle": "Kunci AI belum dipasang di server.",
+    "notConfiguredBody": "Fitur ini butuh GEMINI_API_KEY di Environment Variables Vercel. Semua kredit dikembalikan.",
+    "sessionTitle": "Sesimu habis.",
+    "sessionBody": "Masuk ulang sebentar, lalu coba lagi."
   },
   "common": {
     "cancel": "Batal",

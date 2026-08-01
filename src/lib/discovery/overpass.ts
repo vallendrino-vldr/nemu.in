@@ -128,8 +128,11 @@ function buildQuery(query: string, lat: number, lng: number, radius: number, lim
     clauses.push(`  nwr${around}${businessKeys};`)
   }
 
+  // Overpass' own server-side limit. Kept under the fetch abort and the
+  // sweep budget so the slow path fails as a clean empty result rather
+  // than as a killed serverless function.
   return [
-    '[out:json][timeout:24];',
+    '[out:json][timeout:12];',
     '(',
     ...clauses,
     ');',
@@ -197,7 +200,7 @@ async function geocodeCity(city: string): Promise<{ lat: number; lng: number } |
   try {
     const response = await fetch(url, {
       headers: { 'User-Agent': USER_AGENT, Accept: 'application/json' },
-      signal: AbortSignal.timeout(8_000),
+      signal: AbortSignal.timeout(6_000),
       cache: 'no-store',
     })
     if (!response.ok) return null
@@ -224,7 +227,7 @@ async function runOverpass(query: string): Promise<OsmElement[]> {
           'User-Agent': USER_AGENT,
         },
         body: `data=${encodeURIComponent(query)}`,
-        signal: AbortSignal.timeout(26_000),
+        signal: AbortSignal.timeout(14_000),
         cache: 'no-store',
       })
 

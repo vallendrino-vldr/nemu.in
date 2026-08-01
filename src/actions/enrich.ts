@@ -75,8 +75,11 @@ export async function scoreLeadAction(leadId: string): Promise<ActionResult<Scor
   }
 
   let balance: number
+  let wasFree = false
   try {
-    balance = (await charge(supabase, 'score', { leadId })).balance
+    const charged = await charge(supabase, 'score', { leadId })
+    balance = charged.balance
+    wasFree = charged.wasFree
   } catch (error) {
     if (error instanceof CreditError)
       return fail('insufficient_credits', { needed: error.needed, have: error.have })
@@ -92,8 +95,13 @@ export async function scoreLeadAction(leadId: string): Promise<ActionResult<Scor
 
     return succeed({ ...result, balance })
   } catch (error) {
-    await refund(user.id, 'score', 'gemini_failed')
-    if (error instanceof GeminiError && error.kind === 'exhausted') return fail('ai_busy')
+    await refund(user.id, 'score', 'gemini_failed', wasFree)
+    if (error instanceof GeminiError) {
+      if (error.kind === 'exhausted') return fail('ai_busy')
+      // No key configured, or every key rejected: a deployment problem
+      // the operator can actually fix, so say so instead of shrugging.
+      if (error.kind === 'auth') return fail('not_configured')
+    }
     return fail('unknown')
   }
 }
@@ -127,8 +135,11 @@ export async function writePitchAction(
   }
 
   let balance: number
+  let wasFree = false
   try {
-    balance = (await charge(supabase, 'pitch', { leadId, tone })).balance
+    const charged = await charge(supabase, 'pitch', { leadId, tone })
+    balance = charged.balance
+    wasFree = charged.wasFree
   } catch (error) {
     if (error instanceof CreditError)
       return fail('insufficient_credits', { needed: error.needed, have: error.have })
@@ -140,8 +151,13 @@ export async function writePitchAction(
     await supabase.from('leads').update({ pitch: message, pitch_tone: tone } as never).eq('id', leadId)
     return succeed({ message, tone, balance })
   } catch (error) {
-    await refund(user.id, 'pitch', 'gemini_failed')
-    if (error instanceof GeminiError && error.kind === 'exhausted') return fail('ai_busy')
+    await refund(user.id, 'pitch', 'gemini_failed', wasFree)
+    if (error instanceof GeminiError) {
+      if (error.kind === 'exhausted') return fail('ai_busy')
+      // No key configured, or every key rejected: a deployment problem
+      // the operator can actually fix, so say so instead of shrugging.
+      if (error.kind === 'auth') return fail('not_configured')
+    }
     return fail('unknown')
   }
 }
@@ -173,8 +189,11 @@ export async function deepAuditAction(leadId: string): Promise<ActionResult<Deep
   }
 
   let balance: number
+  let wasFree = false
   try {
-    balance = (await charge(supabase, 'deep_pitch', { leadId })).balance
+    const charged = await charge(supabase, 'deep_pitch', { leadId })
+    balance = charged.balance
+    wasFree = charged.wasFree
   } catch (error) {
     if (error instanceof CreditError)
       return fail('insufficient_credits', { needed: error.needed, have: error.have })
@@ -189,8 +208,13 @@ export async function deepAuditAction(leadId: string): Promise<ActionResult<Deep
       .eq('id', leadId)
     return succeed({ ...audit, balance })
   } catch (error) {
-    await refund(user.id, 'deep_pitch', 'gemini_failed')
-    if (error instanceof GeminiError && error.kind === 'exhausted') return fail('ai_busy')
+    await refund(user.id, 'deep_pitch', 'gemini_failed', wasFree)
+    if (error instanceof GeminiError) {
+      if (error.kind === 'exhausted') return fail('ai_busy')
+      // No key configured, or every key rejected: a deployment problem
+      // the operator can actually fix, so say so instead of shrugging.
+      if (error.kind === 'auth') return fail('not_configured')
+    }
     return fail('unknown')
   }
 }

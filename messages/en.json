@@ -208,7 +208,11 @@
     "quotaTitle": "Google's daily quota is maxed out.",
     "quotaBody": "That limit is theirs, not ours. It resets at midnight Pacific time.",
     "aiBusyTitle": "The AI queue is jammed.",
-    "aiBusyBody": "We tried both routes and both are full. Your credits were not deducted."
+    "aiBusyBody": "We tried both routes and both are full. Your credits were not deducted.",
+    "notConfiguredTitle": "The AI key isn't set on the server.",
+    "notConfiguredBody": "This needs GEMINI_API_KEY in the Vercel environment variables. Your credits were refunded.",
+    "sessionTitle": "Your session expired.",
+    "sessionBody": "Sign in again, then retry."
   },
   "common": {
     "cancel": "Cancel",

@@ -68,7 +68,15 @@ export async function refund(
   userId: string,
   action: BillableAction,
   reason: string,
+  /**
+   * Whether the original charge was waived. Super admins are billed zero,
+   * so refunding the list price would mint credits out of nothing — the
+   * account would grow every time an operation failed.
+   */
+  wasFree = false,
 ): Promise<void> {
+  if (wasFree) return
+
   const admin = getAdminClient()
   await admin.rpc('refund_credits', {
     p_user: userId,

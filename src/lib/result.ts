@@ -19,6 +19,8 @@ export type FailureCode =
   | 'weak_password'
   | 'email_taken'
   | 'rate_limited'
+  /* A required API key is absent from the deployment. */
+  | 'not_configured'
   | 'unknown'
 
 export interface Failure {
