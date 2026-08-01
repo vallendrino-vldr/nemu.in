@@ -108,33 +108,39 @@ export function Globe({ className }: { className?: string }) {
   }, [mounted, resolvedTheme])
 
   return (
-    <div className={cn('relative aspect-square w-full', className)}>
-      {/* Warm bloom behind the sphere so it sits in the scene rather than on it. */}
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-[-18%] animate-aurora-drift rounded-full bg-hearth blur-2xl"
-      />
-      <canvas
-        ref={canvasRef}
-        aria-label="Peta Indonesia"
-        role="img"
-        className="relative h-full w-full cursor-grab opacity-0 transition-opacity duration-700 ease-settle active:cursor-grabbing"
-        style={{ contain: 'layout paint size' }}
-        onPointerDown={(event) => {
-          pointerDownAt.current = event.clientX - dragOffset.current * 220
-          event.currentTarget.setPointerCapture(event.pointerId)
-        }}
-        onPointerUp={() => {
-          pointerDownAt.current = null
-        }}
-        onPointerCancel={() => {
-          pointerDownAt.current = null
-        }}
-        onPointerMove={(event) => {
-          if (pointerDownAt.current === null) return
-          dragOffset.current = (event.clientX - pointerDownAt.current) / 220
-        }}
-      />
+    // The clipping fix: the bloom below is intentionally larger than the
+    // sphere, and on a narrow screen that overflow was pushing past the
+    // viewport and getting sliced by the page edge. Clipping it here
+    // keeps the glow but never lets it escape the column.
+    <div className={cn('relative isolate w-full overflow-hidden', className)}>
+      <div className="relative mx-auto aspect-square w-full max-w-[min(88vw,26rem)]">
+        {/* Warm bloom behind the sphere so it sits in the scene rather than on it. */}
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-[-12%] animate-aurora-drift rounded-full bg-hearth blur-2xl"
+        />
+        <canvas
+          ref={canvasRef}
+          aria-label="Peta Indonesia"
+          role="img"
+          className="relative h-full w-full cursor-grab opacity-0 transition-opacity duration-700 ease-settle active:cursor-grabbing"
+          style={{ contain: 'layout paint size', touchAction: 'pan-y' }}
+          onPointerDown={(event) => {
+            pointerDownAt.current = event.clientX - dragOffset.current * 220
+            event.currentTarget.setPointerCapture(event.pointerId)
+          }}
+          onPointerUp={() => {
+            pointerDownAt.current = null
+          }}
+          onPointerCancel={() => {
+            pointerDownAt.current = null
+          }}
+          onPointerMove={(event) => {
+            if (pointerDownAt.current === null) return
+            dragOffset.current = (event.clientX - pointerDownAt.current) / 220
+          }}
+        />
+      </div>
     </div>
   )
 }

@@ -89,7 +89,12 @@
     "waReady": "{count} siap di-WA",
     "tierFilter": "Tampilkan",
     "filterAll": "Semua",
-    "filterWa": "Siap WA"
+    "filterWa": "Siap WA",
+    "locationDenied": "Izin lokasi ditolak. Tidak apa-apa — ketik saja nama kotanya.",
+    "locationLocked": "Lokasi terkunci",
+    "useLocation": "Pakai lokasiku",
+    "landedTitle": "lead masuk ke arsip",
+    "landedBody": "Buka tab Arsip untuk mulai menghubungi, atau tab Peta untuk melihat sebarannya."
   },
   "lead": {
     "noWebsite": "Belum punya website",
@@ -164,7 +169,8 @@
     "searchUser": "Cari nama atau email…",
     "roleUser": "Pengguna",
     "roleAdmin": "Super Admin",
-    "lastSeen": "Terakhir aktif"
+    "lastSeen": "Terakhir aktif",
+    "loadFailed": "Gagal memuat data."
   },
   "errors": {
     "genericTitle": "Ada yang macet di belakang layar.",
@@ -190,6 +196,40 @@
     "km": "km",
     "search": "Cari",
     "all": "Semua",
-    "of": "dari"
+    "of": "dari",
+    "nearby": "sekitarmu"
+  },
+  "shell": {
+    "hunt": "Berburu",
+    "leads": "Arsip",
+    "map": "Peta",
+    "profile": "Akun",
+    "god": "God"
+  },
+  "map": {
+    "legendWhatsapp": "Siap WA",
+    "legendPhone": "Telepon",
+    "legendVisit": "Datangi",
+    "emptyTitle": "Petanya masih kosong.",
+    "emptyBody": "Sisir satu daerah dulu di tab Berburu, nanti hasilnya muncul di sini sebagai titik.",
+    "selected": "Lead terpilih",
+    "clear": "Tutup"
+  },
+  "leads": {
+    "filterAll": "Semua",
+    "emptyTitle": "Arsipmu masih kosong.",
+    "emptyBody": "Buka tab Berburu, sebutkan jenis usaha dan kotanya. Hasilnya otomatis masuk ke sini.",
+    "noneInFilter": "Tidak ada yang cocok dengan saringan ini.",
+    "loadMore": "Tampilkan {remaining} lagi"
+  },
+  "profile": {
+    "roleAdmin": "Super Admin",
+    "prefs": "Preferensi",
+    "theme": "Tema",
+    "language": "Bahasa",
+    "statLeads": "Lead",
+    "statWaReady": "Siap WA",
+    "free": "GRATIS",
+    "signOut": "Keluar"
   }
 }

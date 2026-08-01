@@ -4,6 +4,7 @@ import * as React from 'react'
 import { ThemeProvider } from 'next-themes'
 import { Toaster } from 'sonner'
 import { CreditBurstLayer } from '@/components/credit-burst-layer'
+import { PwaManager } from '@/components/pwa-manager'
 
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
@@ -16,6 +17,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
     >
       {children}
       <CreditBurstLayer />
+      <PwaManager />
       <Toaster
         position="top-center"
         offset={16}

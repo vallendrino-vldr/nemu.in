@@ -1,0 +1,36 @@
+{
+  "name": "Nemu.in — Mesin Pencari Klien",
+  "short_name": "Nemu.in",
+  "description": "Cari UMKM yang belum punya website, nilai pakai AI, kirim pesan pembuka lewat WhatsApp.",
+  "start_url": "/dashboard",
+  "scope": "/",
+  "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
+  "orientation": "portrait",
+  "background_color": "#12100e",
+  "theme_color": "#12100e",
+  "lang": "id",
+  "dir": "ltr",
+  "categories": ["business", "productivity"],
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-maskable.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Berburu lead",
+      "short_name": "Berburu",
+      "url": "/dashboard"
+    }
+  ]
+}

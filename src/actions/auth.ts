@@ -4,20 +4,37 @@ import { redirect } from 'next/navigation'
 import { headers } from 'next/headers'
 import { getServerClient } from '@/lib/supabase/server'
 
-function siteOrigin(headerList: Headers): string {
-  const configured = process.env.NEXT_PUBLIC_SITE_URL
-  if (configured) return configured.replace(/\/$/, '')
+/**
+ * Resolves the origin the user is actually browsing, in that order of
+ * trust: forwarded host (what the browser really typed) → Host header →
+ * configured env var, last.
+ *
+ * The env var comes last on purpose. A `NEXT_PUBLIC_SITE_URL` left at
+ * `http://localhost:3000` in the Vercel dashboard is exactly how an
+ * OAuth round trip ends up dumping a phone browser on localhost, and
+ * that is a config mistake the code should survive rather than repeat.
+ */
+function resolveOrigin(headerList: Headers): string {
+  const forwardedHost = headerList.get('x-forwarded-host')
+  const host = forwardedHost ?? headerList.get('host')
 
-  // Vercel preview deployments get a fresh hostname on every push, so the
-  // redirect target has to be derived rather than hardcoded.
-  const host = headerList.get('x-forwarded-host') ?? headerList.get('host')
-  const proto = headerList.get('x-forwarded-proto') ?? 'https'
-  return `${proto}://${host}`
+  if (host && !host.startsWith('localhost') && !host.startsWith('127.0.0.1')) {
+    const proto = headerList.get('x-forwarded-proto') ?? 'https'
+    return `${proto}://${host}`
+  }
+
+  // Genuinely local development, or no host header at all.
+  const configured = process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, '')
+  if (host) {
+    const proto = headerList.get('x-forwarded-proto') ?? 'http'
+    return `${proto}://${host}`
+  }
+  return configured ?? 'http://localhost:3000'
 }
 
 export async function signInWithGoogle(returnTo = '/dashboard') {
   const supabase = await getServerClient()
-  const origin = siteOrigin(await headers())
+  const origin = resolveOrigin(await headers())
 
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: 'google',

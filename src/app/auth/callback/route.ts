@@ -14,24 +14,32 @@ export async function GET(request: NextRequest) {
   const code = searchParams.get('code')
   const next = searchParams.get('next') ?? '/dashboard'
 
+  // Behind a proxy the reported origin is the internal one, so the
+  // forwarded host is the only value that matches what the browser typed.
+  const forwardedHost = request.headers.get('x-forwarded-host')
+  const base =
+    forwardedHost && !forwardedHost.startsWith('localhost')
+      ? `${request.headers.get('x-forwarded-proto') ?? 'https'}://${forwardedHost}`
+      : origin
+
   if (!code) {
-    return NextResponse.redirect(`${origin}/?auth=failed`)
+    // Supabase reports provider failures as query params rather than a
+    // code. Passing the real reason through beats a generic "failed".
+    const providerError =
+      searchParams.get('error_description') ?? searchParams.get('error') ?? 'no_code'
+    return NextResponse.redirect(
+      `${base}/?auth=failed&reason=${encodeURIComponent(providerError)}`,
+    )
   }
 
   const supabase = await getServerClient()
   const { error } = await supabase.auth.exchangeCodeForSession(code)
 
   if (error) {
-    return NextResponse.redirect(`${origin}/?auth=failed`)
+    return NextResponse.redirect(
+      `${base}/?auth=failed&reason=${encodeURIComponent(error.message)}`,
+    )
   }
-
-  // Behind a proxy the reported origin can be the internal one; prefer
-  // the forwarded host so the user does not land on a localhost URL.
-  const forwardedHost = request.headers.get('x-forwarded-host')
-  const base =
-    process.env.NODE_ENV === 'development' || !forwardedHost
-      ? origin
-      : `https://${forwardedHost}`
 
   return NextResponse.redirect(`${base}${next}`)
 }

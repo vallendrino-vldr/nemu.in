@@ -1,3 +1,5 @@
+@import 'leaflet/dist/leaflet.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -254,6 +256,67 @@
 
   .overline {
     @apply text-overline font-semibold uppercase text-ink-faint;
+  }
+
+  /* ── Leaflet, dressed in the app's own materials ──────────────────
+     The stock stylesheet ships white boxes with 4px corners and a blue
+     focus ring. Left alone it reads as a third-party widget dropped into
+     the page, which is exactly the "AI slop" tell this project avoids. */
+  .leaflet-container {
+    background: hsl(var(--surface-sunken)) !important;
+    font-family: inherit !important;
+    /* Leaflet's default outline survives our reset and looks foreign. */
+    outline: none !important;
+  }
+
+  .leaflet-control-zoom {
+    border: none !important;
+    box-shadow: var(--shadow-relief) !important;
+    border-radius: theme('borderRadius.chip') !important;
+    overflow: hidden;
+  }
+
+  .leaflet-control-zoom a {
+    background: hsl(var(--surface-raised)) !important;
+    color: hsl(var(--ink)) !important;
+    border-color: hsl(var(--hairline)) !important;
+    width: 34px !important;
+    height: 34px !important;
+    line-height: 34px !important;
+    font-size: 17px !important;
+    transition: background-color 150ms;
+  }
+  .leaflet-control-zoom a:hover {
+    background: hsl(var(--surface-sunken)) !important;
+  }
+  .leaflet-control-zoom a:active {
+    box-shadow: var(--shadow-pressed) !important;
+  }
+
+  .leaflet-control-attribution {
+    background: hsl(var(--surface-raised) / 0.82) !important;
+    color: hsl(var(--ink-faint)) !important;
+    font-size: 9px !important;
+    padding: 2px 6px !important;
+    border-radius: 999px 0 0 0 !important;
+    backdrop-filter: blur(8px);
+  }
+  .leaflet-control-attribution a {
+    color: hsl(var(--ink-soft)) !important;
+  }
+
+  .leaflet-tooltip {
+    background: hsl(var(--surface-raised)) !important;
+    color: hsl(var(--ink)) !important;
+    border: none !important;
+    border-radius: theme('borderRadius.chip') !important;
+    box-shadow: var(--shadow-floating) !important;
+    font-size: 11px !important;
+    font-weight: 600 !important;
+    padding: 5px 9px !important;
+  }
+  .leaflet-tooltip-top::before {
+    border-top-color: hsl(var(--surface-raised)) !important;
   }
 }
 

@@ -45,6 +45,11 @@ export const viewport: Viewport = {
   ],
   width: 'device-width',
   initialScale: 1,
+  // An installed app must not rubber-band or pinch-zoom like a document,
+  // and `cover` is what lets the shell paint under the notch and the
+  // home indicator instead of leaving grey bars.
+  maximumScale: 1,
+  userScalable: false,
   viewportFit: 'cover',
 }
 
@@ -60,6 +65,19 @@ export async function generateMetadata({
     title: { default: t('title'), template: '%s · Nemu.in' },
     description: t('description'),
     applicationName: 'Nemu.in',
+    manifest: '/manifest.webmanifest',
+    icons: {
+      icon: [{ url: '/icon.svg', type: 'image/svg+xml' }],
+      apple: [{ url: '/icon.svg' }],
+    },
+    appleWebApp: {
+      capable: true,
+      title: 'Nemu.in',
+      // Translucent lets the shell's own header paint behind the status
+      // bar, which is what separates an installed app from a bookmark.
+      statusBarStyle: 'black-translucent',
+    },
+    formatDetection: { telephone: false },
     openGraph: { title: t('title'), description: t('description'), type: 'website', locale },
     robots: { index: true, follow: true },
   }

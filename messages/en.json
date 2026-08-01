@@ -89,7 +89,12 @@
     "waReady": "{count} WhatsApp-ready",
     "tierFilter": "Show",
     "filterAll": "All",
-    "filterWa": "WhatsApp-ready"
+    "filterWa": "WhatsApp-ready",
+    "locationDenied": "Location denied. No problem — just type the city name.",
+    "locationLocked": "Location locked",
+    "useLocation": "Use my location",
+    "landedTitle": "leads landed in your archive",
+    "landedBody": "Open the Archive tab to start reaching out, or the Map tab to see how they cluster."
   },
   "lead": {
     "noWebsite": "No website",
@@ -164,7 +169,8 @@
     "searchUser": "Search name or email…",
     "roleUser": "User",
     "roleAdmin": "Super Admin",
-    "lastSeen": "Last active"
+    "lastSeen": "Last active",
+    "loadFailed": "Could not load the data."
   },
   "errors": {
     "genericTitle": "Something jammed behind the scenes.",
@@ -190,6 +196,40 @@
     "km": "km",
     "search": "Search",
     "all": "All",
-    "of": "of"
+    "of": "of",
+    "nearby": "your area"
+  },
+  "shell": {
+    "hunt": "Hunt",
+    "leads": "Archive",
+    "map": "Map",
+    "profile": "Account",
+    "god": "God"
+  },
+  "map": {
+    "legendWhatsapp": "WhatsApp",
+    "legendPhone": "Phone",
+    "legendVisit": "Visit",
+    "emptyTitle": "Nothing on the map yet.",
+    "emptyBody": "Sweep an area from the Hunt tab and every result shows up here as a pin.",
+    "selected": "Selected lead",
+    "clear": "Close"
+  },
+  "leads": {
+    "filterAll": "All",
+    "emptyTitle": "Your archive is empty.",
+    "emptyBody": "Open the Hunt tab, name a trade and a city. Results land here automatically.",
+    "noneInFilter": "Nothing matches this filter.",
+    "loadMore": "Show {remaining} more"
+  },
+  "profile": {
+    "roleAdmin": "Super Admin",
+    "prefs": "Preferences",
+    "theme": "Theme",
+    "language": "Language",
+    "statLeads": "Leads",
+    "statWaReady": "WA ready",
+    "free": "FREE",
+    "signOut": "Sign out"
   }
 }
