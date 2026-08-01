@@ -2,7 +2,7 @@
 
 import * as React from 'react'
 import { useTranslations } from 'next-intl'
-import { Infinity as InfinityIcon, Zap } from 'lucide-react'
+import { Zap } from 'lucide-react'
 
 import { getBrowserClient } from '@/lib/supabase/client'
 import { useCreditStore } from '@/store/credit-store'
@@ -14,6 +14,13 @@ interface CreditMeterProps {
   userId: string
   initialBalance: number
   role: AccountRole
+  /**
+   * Set when an admin has flipped God Mode's "bill me like a user"
+   * switch. Without it the meter shows `∞` and never moves, which made
+   * the owner's own account useless as a test subject — the whole point
+   * of the switch is watching the number actually fall.
+   */
+  billed?: boolean
   className?: string
 }
 
@@ -25,7 +32,13 @@ interface CreditMeterProps {
  * refresh and no polling. That live channel is also what makes the "+30"
  * burst possible — the client is told the new number, not asked to guess.
  */
-export function CreditMeter({ userId, initialBalance, role, className }: CreditMeterProps) {
+export function CreditMeter({
+  userId,
+  initialBalance,
+  role,
+  billed = false,
+  className,
+}: CreditMeterProps) {
   const t = useTranslations('credits')
   const badgeRef = React.useRef<HTMLDivElement>(null)
   const [pulsing, setPulsing] = React.useState(false)
@@ -35,7 +48,7 @@ export function CreditMeter({ userId, initialBalance, role, className }: CreditM
   const hydrate = useCreditStore((state) => state.hydrate)
   const reconcile = useCreditStore((state) => state.reconcile)
 
-  const unlimited = role === 'super_admin'
+  const unlimited = role === 'super_admin' && !billed
 
   React.useEffect(() => {
     hydrate(initialBalance, role)
@@ -130,14 +143,12 @@ export function CreditMeter({ userId, initialBalance, role, className }: CreditM
       <span
         className={cn(
           'relative grid h-6 w-6 place-items-center rounded-full',
-          depleted ? 'bg-sambal-500/20 text-sambal-500' : 'bg-ember-500/20 text-ember-500',
+          depleted ? 'bg-sambal-500/20 text-ink-sambal' : 'bg-ember-500/20 text-ink-ember',
         )}
       >
-        {unlimited ? (
-          <InfinityIcon className="h-3.5 w-3.5" strokeWidth={2.5} />
-        ) : (
-          <Zap className="h-3.5 w-3.5" strokeWidth={2.5} fill="currentColor" />
-        )}
+        {/* The bolt always means "credits". The infinity used to live here
+            AND in the value slot, so an admin saw ∞ twice in one pill. */}
+        <Zap className="h-3.5 w-3.5" strokeWidth={2.5} fill="currentColor" />
       </span>
 
       <span className="relative flex items-baseline gap-1.5">
@@ -145,7 +156,7 @@ export function CreditMeter({ userId, initialBalance, role, className }: CreditM
           className={cn(
             'font-mono text-[0.9375rem] font-bold leading-none tabular',
             pulsing && 'animate-counter-pop',
-            depleted ? 'text-sambal-500' : low ? 'text-ember-500' : 'text-ink',
+            depleted ? 'text-ink-sambal' : low ? 'text-ink-ember' : 'text-ink',
           )}
         >
           {unlimited ? '∞' : shown}

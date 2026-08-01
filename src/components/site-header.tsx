@@ -26,7 +26,7 @@ export async function SiteHeader({ profile }: { profile: Profile | null }) {
             <span className="font-display text-base leading-none text-white">N</span>
           </span>
           <span className="font-display text-xl leading-none tracking-tight text-ink">
-            Nemu<span className="text-ember-500">.in</span>
+            Nemu<span className="text-ink-ember">.in</span>
           </span>
         </Link>
 
@@ -37,6 +37,7 @@ export async function SiteHeader({ profile }: { profile: Profile | null }) {
                 userId={profile.id}
                 initialBalance={profile.credits}
                 role={profile.role}
+                billed={profile.bill_admin}
                 className="hidden sm:inline-flex"
               />
             </SafeWidget>
@@ -73,7 +74,12 @@ export async function SiteHeader({ profile }: { profile: Profile | null }) {
       {profile ? (
         <div className="container flex justify-end pb-2.5 sm:hidden">
           <SafeWidget label="credit-meter">
-            <CreditMeter userId={profile.id} initialBalance={profile.credits} role={profile.role} />
+            <CreditMeter
+              userId={profile.id}
+              initialBalance={profile.credits}
+              role={profile.role}
+              billed={profile.bill_admin}
+            />
           </SafeWidget>
         </div>
       ) : null}

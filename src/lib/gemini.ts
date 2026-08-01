@@ -29,34 +29,110 @@ import 'server-only'
 
 const ENDPOINT_BASE = 'https://generativelanguage.googleapis.com/v1beta/models'
 const COOLDOWN_MS = 45_000
+/** How long a warm instance trusts its copy of the key list. */
+const KEY_CACHE_MS = 60_000
 
 interface KeySlot {
   key: string
   label: string
   cooldownUntil: number
+  /** Set for keys that came from the database, so usage can be recorded. */
+  rowId?: string
 }
 
 let slots: KeySlot[] | null = null
+let slotsLoadedAt = 0
 let cursor = 0
 
 /** Models known to reject `thinkingConfig`. Learned at runtime, not guessed. */
 const thinkingUnsupported = new Set<string>()
 
-function getSlots(): KeySlot[] {
-  if (slots) return slots
-  // Every GEMINI_API_KEY_* variable joins the rotation. Adding a fourth
-  // key is an env change, not a code change — free-tier limits are per
-  // key, so each one added is another whole quota.
+function envSlots(): KeySlot[] {
+  // Every GEMINI_API_KEY_* variable joins the rotation. Free-tier limits
+  // are per key, so each one added is another whole quota.
   const configured: Array<[string, string | undefined]> = [
     ['primary', process.env.GEMINI_API_KEY_PRIMARY],
     ['secondary', process.env.GEMINI_API_KEY_SECONDARY],
     ['tertiary', process.env.GEMINI_API_KEY_TERTIARY],
     ['quaternary', process.env.GEMINI_API_KEY_QUATERNARY],
   ]
-  slots = configured
+  return configured
     .filter((entry): entry is [string, string] => Boolean(entry[1]))
     .map(([label, key]) => ({ key, label, cooldownUntil: 0 }))
+}
+
+/**
+ * The rotation: keys added from God Mode, plus anything still in the
+ * environment.
+ *
+ * Env keys used to be the only source, which meant rotating one required
+ * a redeploy. Database keys now come first and env keys stay as a
+ * fallback, so an empty `api_keys` table changes nothing about how the
+ * app behaves — the owner can migrate one key at a time instead of all
+ * at once.
+ *
+ * The list is cached per warm instance for a minute. A key switched off
+ * in the console therefore stops being used within about a minute rather
+ * than instantly, which is the right trade against a database round trip
+ * on every single AI call. The kill switch, which IS instant, is the
+ * control for "stop everything now".
+ *
+ * Any failure to reach the database falls through to the env keys. An
+ * admin table being briefly unreachable must never take AI down.
+ */
+async function getSlots(): Promise<KeySlot[]> {
+  const now = Date.now()
+  if (slots && now - slotsLoadedAt < KEY_CACHE_MS) return slots
+
+  const fromEnv = envSlots()
+
+  try {
+    const { getAdminClient } = await import('@/lib/supabase/admin')
+    const { data } = await getAdminClient()
+      .from('api_keys')
+      .select('id, label, secret')
+      .eq('provider', 'gemini')
+      .eq('active', true)
+      .order('created_at', { ascending: true })
+
+    const fromDb: KeySlot[] = (data ?? []).map((row) => ({
+      key: row.secret,
+      label: row.label,
+      cooldownUntil: 0,
+      rowId: row.id,
+    }))
+
+    // A key present in both places is one key, not two attempts at the
+    // same exhausted quota.
+    const seen = new Set(fromDb.map((slot) => slot.key))
+    slots = [...fromDb, ...fromEnv.filter((slot) => !seen.has(slot.key))]
+  } catch (error) {
+    console.warn('[gemini] key table unreachable, using env only:', (error as Error)?.message)
+    slots = fromEnv
+  }
+
+  slotsLoadedAt = now
+  cursor = 0
   return slots
+}
+
+/** Records the outcome against a database-backed key. Never blocks. */
+function noteKeyOutcome(slot: KeySlot, error: string | null): void {
+  if (!slot.rowId) return
+  void (async () => {
+    try {
+      const { getAdminClient } = await import('@/lib/supabase/admin')
+      await getAdminClient().rpc('mark_api_key', { p_id: slot.rowId!, p_error: error })
+    } catch {
+      /* telemetry, not a dependency */
+    }
+  })()
+}
+
+/** Drops the cache so the next call re-reads the table immediately. */
+export function invalidateGeminiKeys(): void {
+  slots = null
+  slotsLoadedAt = 0
 }
 
 export class GeminiError extends Error {
@@ -100,7 +176,7 @@ export async function generateStructured<T>({
   thinking = false,
   timeoutMs = 15_000,
 }: GenerateInput): Promise<T> {
-  const pool = getSlots()
+  const pool = await getSlots()
   if (pool.length === 0) throw new GeminiError('No Gemini keys configured', 'auth')
 
   const model = modelFor(tier)
@@ -152,6 +228,7 @@ export async function generateStructured<T>({
         if (response.status === 429 || response.status === 503) {
           slot.cooldownUntil = Date.now() + COOLDOWN_MS
           lastKind = 'exhausted'
+          noteKeyOutcome(slot, `Kuota penuh (${response.status})`)
           break // next key, not next attempt
         }
 
@@ -165,6 +242,7 @@ export async function generateStructured<T>({
 
         if (response.status === 401 || response.status === 403 || response.status === 400) {
           lastKind = 'auth'
+          noteKeyOutcome(slot, `Kunci ditolak Google (${response.status})`)
           break
         }
         if (!response.ok) {
@@ -194,6 +272,7 @@ export async function generateStructured<T>({
         }
 
         slot.cooldownUntil = 0
+        noteKeyOutcome(slot, null)
         return parsed
       } catch {
         lastKind = 'network'

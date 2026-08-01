@@ -129,7 +129,7 @@ export function PwaManager() {
           className="fixed inset-x-3 z-[80] flex items-center gap-3 rounded-well border border-white/10 bg-surface-raised/90 p-3 shadow-floating backdrop-blur-xl"
           style={{ bottom: 'calc(env(safe-area-inset-bottom, 0px) + 5.5rem)' }}
         >
-          <RefreshCw className="h-4 w-4 shrink-0 text-nila-500" strokeWidth={2.4} />
+          <RefreshCw className="h-4 w-4 shrink-0 text-ink-nila" strokeWidth={2.4} />
           <p className="min-w-0 flex-1 text-[0.8125rem] leading-snug text-ink">
             Versi baru sudah siap.
           </p>

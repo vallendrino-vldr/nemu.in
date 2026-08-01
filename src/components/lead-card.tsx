@@ -121,17 +121,17 @@ export function LeadCard({ lead: initial, index = 0 }: { lead: Lead; index?: num
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.42, delay: Math.min(index * 0.035, 0.28), ease: [0.16, 1, 0.3, 1] }}
     >
-      <Panel tone="raised" pad="none" className="overflow-hidden">
-        <div className="flex gap-4 p-5">
+      <Panel tone="flat" pad="none" className="group overflow-hidden transition-all duration-300 hover:-translate-y-0.5 hover:shadow-relief">
+        <div className="flex gap-4 p-5 sm:p-6">
           <ScoreDial score={lead.ai_score} />
 
           <div className="min-w-0 flex-1">
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
-                <h3 className="truncate text-[0.9375rem] font-bold leading-snug text-ink">
+                <h3 className="truncate text-[1.0625rem] font-bold leading-snug text-ink transition-colors group-hover:text-ink-ember">
                   {lead.name}
                 </h3>
-                <p className="mt-0.5 truncate text-[0.75rem] text-ink-faint">
+                <p className="mt-1 truncate text-[0.8125rem] text-ink-faint">
                   {[lead.category, lead.area].filter(Boolean).join(' · ') || lead.address}
                 </p>
               </div>
@@ -176,7 +176,8 @@ export function LeadCard({ lead: initial, index = 0 }: { lead: Lead; index?: num
             </div>
 
             {lead.ai_verdict ? (
-              <p className="mt-3 border-l-2 border-nila-500/40 pl-3 text-[0.8125rem] leading-relaxed text-ink-soft">
+              <p className="mt-3 rounded-lg bg-surface-sunken p-3 text-[0.8125rem] leading-relaxed text-ink-soft">
+                <span className="font-semibold text-ink">Verdict: </span>
                 {lead.ai_verdict}
               </p>
             ) : null}
@@ -184,7 +185,7 @@ export function LeadCard({ lead: initial, index = 0 }: { lead: Lead; index?: num
         </div>
 
         {/* Action rail — sunken so it reads as a separate machined part. */}
-        <div className="flex flex-wrap items-center gap-2 bg-surface-sunken px-5 py-3.5 shadow-well">
+        <div className="flex flex-wrap items-center gap-2 border-t border-hairline/50 bg-surface-sunken/50 px-5 py-3.5 sm:px-6">
           {lead.ai_score === null ? (
             <Button
               variant="ai"

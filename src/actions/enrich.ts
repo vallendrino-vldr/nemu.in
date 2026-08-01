@@ -4,6 +4,7 @@ import { getServerClient } from '@/lib/supabase/server'
 import { assertServiceEnabled, charge, refund, ApiDisabledError, CreditError } from '@/lib/credits'
 import { GeminiError } from '@/lib/gemini'
 import { scoreLead, writePitch, deepAudit, type PitchTone } from '@/lib/ai/analyst'
+import { costOf } from '@/lib/pricing'
 import { fail, succeed, type ActionResult } from '@/lib/result'
 import type { Lead } from '@/lib/database.types'
 import type { ProspectCandidate } from '@/lib/discovery'
@@ -104,6 +105,155 @@ export async function scoreLeadAction(leadId: string): Promise<ActionResult<Scor
     }
     return fail('unknown')
   }
+}
+
+// ── Bulk score ──────────────────────────────────────────────────────
+
+export interface BulkScoreRow {
+  leadId: string
+  ok: boolean
+  score?: number
+  verdict?: string
+  angle?: string
+}
+
+export interface BulkScoreOutput {
+  results: BulkScoreRow[]
+  scored: number
+  failed: number
+  /** Asked for but not attempted because the balance ran out first. */
+  skipped: number
+  balance: number
+}
+
+/** How many leads one bulk call will attempt. */
+const BULK_LIMIT = 8
+/**
+ * Concurrency.
+ *
+ * Gemini's free tier is rate-limited per key, and firing eight requests
+ * at once walks straight into 429 on every one of them. Three in flight
+ * keeps the key rotation's cooldown logic useful instead of overwhelming
+ * it, and eight leads still finish in roughly three waves — comfortably
+ * inside the page's 60-second budget.
+ */
+const BULK_CONCURRENCY = 3
+
+/**
+ * Scores several leads in one press.
+ *
+ * A sweep returns ten leads and the old flow meant ten separate taps,
+ * each with its own spinner. This is the same paid path per lead — charge,
+ * call, refund on failure — just driven by a small worker pool instead of
+ * by the user's finger.
+ *
+ * Leads the caller cannot afford are reported as `skipped` rather than
+ * attempted and failed, so the UI can say "you could only do 4 of these"
+ * instead of showing four successes and four mysterious errors.
+ */
+export async function scoreLeadsBulk(leadIds: string[]): Promise<ActionResult<BulkScoreOutput>> {
+  const supabase = await getServerClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user) return fail('auth')
+
+  try {
+    await assertServiceEnabled(supabase, 'gemini')
+  } catch (error) {
+    if (error instanceof ApiDisabledError) return fail('api_disabled')
+    throw error
+  }
+
+  const requested = [...new Set(leadIds.filter((id) => typeof id === 'string' && id))].slice(
+    0,
+    BULK_LIMIT,
+  )
+  if (requested.length === 0) return fail('empty')
+
+  // Work out up front how many are actually affordable. Super admins on
+  // the free ride are charged nothing, so their affordable count is the
+  // whole batch.
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('credits, role, bill_admin')
+    .eq('id', user.id)
+    .single()
+
+  const ridesFree = profile?.role === 'super_admin' && !profile?.bill_admin
+  const unitCost = costOf('score')
+  const affordable = ridesFree
+    ? requested.length
+    : Math.min(requested.length, Math.floor((profile?.credits ?? 0) / unitCost))
+
+  if (affordable === 0) {
+    return fail('insufficient_credits', { needed: unitCost, have: profile?.credits ?? 0 })
+  }
+
+  const targets = requested.slice(0, affordable)
+  const results: BulkScoreRow[] = []
+
+  const runOne = async (leadId: string): Promise<BulkScoreRow> => {
+    const lead = await loadLead(supabase, leadId, user.id)
+    if (!lead) return { leadId, ok: false }
+
+    let wasFree = false
+    try {
+      const charged = await charge(supabase, 'score', { leadId, bulk: true })
+      wasFree = charged.wasFree
+    } catch (error) {
+      // Someone else spent the balance mid-batch, or the account was
+      // banned between the pre-check and now. Either way: not attempted.
+      if (error instanceof CreditError) return { leadId, ok: false }
+      throw error
+    }
+
+    try {
+      const result = await scoreLead(asCandidate(lead))
+      await supabase
+        .from('leads')
+        .update({
+          ai_score: result.score,
+          ai_verdict: result.verdict,
+          ai_angle: result.angle,
+        } as never)
+        .eq('id', leadId)
+      return { leadId, ok: true, ...result }
+    } catch {
+      await refund(user.id, 'score', 'gemini_failed_bulk', wasFree)
+      return { leadId, ok: false }
+    }
+  }
+
+  // A fixed pool of workers pulling from one queue: the batch finishes as
+  // fast as the slowest three, not as slow as the sum of eight.
+  const queue = [...targets]
+  await Promise.all(
+    Array.from({ length: Math.min(BULK_CONCURRENCY, queue.length) }, async () => {
+      for (;;) {
+        const next = queue.shift()
+        if (!next) return
+        results.push(await runOne(next))
+      }
+    }),
+  )
+
+  // Read the balance back rather than deriving it: concurrent charges
+  // make local arithmetic a guess, and the meter must never disagree
+  // with the database.
+  const { data: after } = await supabase
+    .from('profiles')
+    .select('credits')
+    .eq('id', user.id)
+    .single()
+
+  return succeed({
+    results,
+    scored: results.filter((row) => row.ok).length,
+    failed: results.filter((row) => !row.ok).length,
+    skipped: requested.length - targets.length,
+    balance: after?.credits ?? profile?.credits ?? 0,
+  })
 }
 
 // ── Standard pitch ──────────────────────────────────────────────────

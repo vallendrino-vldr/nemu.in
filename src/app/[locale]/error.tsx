@@ -45,7 +45,7 @@ export default function LocaleError({
   return (
     <div className="container grid min-h-svh place-items-center py-16">
       <Panel pad="lg" className="w-full max-w-md text-center">
-        <span className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-surface-sunken text-ember-500 shadow-well">
+        <span className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-surface-sunken text-ink-ember shadow-well">
           <Unplug className="h-6 w-6" strokeWidth={2} />
         </span>
 

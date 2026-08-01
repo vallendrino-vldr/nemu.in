@@ -55,11 +55,14 @@ const TINT: Record<'light' | 'dark', Array<[string, string, string]>> = {
     ['landuse', 'fill-color', 'hsl(36 24% 91%)'],
     ['building', 'fill-color', 'hsl(32 18% 88%)'],
   ],
+  // Tracks the widened dark surface ladder. When these drifted from the
+  // app's own values the map read as a third-party embed dropped into
+  // the page, which is the exact tell this project avoids.
   dark: [
-    ['land', 'background-color', 'hsl(24 14% 8%)'],
-    ['water', 'fill-color', 'hsl(210 30% 14%)'],
-    ['landuse', 'fill-color', 'hsl(24 12% 11%)'],
-    ['building', 'fill-color', 'hsl(26 11% 14%)'],
+    ['land', 'background-color', 'hsl(24 16% 7%)'],
+    ['water', 'fill-color', 'hsl(210 30% 13%)'],
+    ['landuse', 'fill-color', 'hsl(24 13% 10%)'],
+    ['building', 'fill-color', 'hsl(26 12% 15%)'],
   ],
 }
 

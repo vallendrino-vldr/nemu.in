@@ -25,10 +25,13 @@ const handleLocale = createIntlMiddleware(routing)
 /**
  * Paths that require a session. Everything else skips the auth hop.
  *
- * God Mode is not listed because it is no longer a route — it is a tab
- * inside the shell, gated by the profile role the shell already loaded.
+ * `/god` is a real route again. The cookie check here only proves someone
+ * is signed in — the page itself re-reads the role from the database and
+ * bounces anyone who is not a super_admin, because a JWT claim can be an
+ * hour stale after a demotion and this is the one screen where that hour
+ * would matter.
  */
-const PROTECTED = ['/dashboard']
+const PROTECTED = ['/dashboard', '/god']
 
 function isProtected(pathname: string): boolean {
   // Locale prefixes are stripped first: /en/dashboard and /dashboard are

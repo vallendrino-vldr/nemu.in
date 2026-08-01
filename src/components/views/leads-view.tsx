@@ -2,13 +2,13 @@
 
 import * as React from 'react'
 import { useTranslations } from 'next-intl'
-import { Inbox, Trash2 } from 'lucide-react'
+import { Inbox, Trash2, Sparkles } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import { Panel } from '@/components/ui/primitives'
 import { LeadCard } from '@/components/lead-card'
 import { useLeadStore, sellableOf, visibleOf } from '@/store/lead-store'
-import { deleteLeads } from '@/actions/enrich'
+import { deleteLeads, scoreLeadsBulk } from '@/actions/enrich'
 import { toast } from 'sonner'
 import { haptic } from '@/lib/haptics'
 import type { ContactTierDb } from '@/lib/database.types'
@@ -38,7 +38,46 @@ export function LeadsView() {
 
   const [limit, setLimit] = React.useState(PAGE)
   const [armed, setArmed] = React.useState(false)
+  const [scoringBulk, setScoringBulk] = React.useState(false)
   const removeFromStore = useLeadStore((state) => state.remove)
+  const patchLead = useLeadStore((state) => state.patch)
+
+  const unscoredIds = React.useMemo(() => {
+    return visible.filter((l) => l.ai_score === null).map((l) => l.id)
+  }, [visible])
+
+  const handleBulkScore = async () => {
+    if (unscoredIds.length === 0) return
+    setScoringBulk(true)
+    haptic('tap')
+    
+    // We only send up to 8 at a time (as BULK_LIMIT = 8 in scoreLeadsBulk)
+    const result = await scoreLeadsBulk(unscoredIds)
+    setScoringBulk(false)
+    
+    if (result.ok) {
+      if (result.data.scored > 0) {
+        toast.success(t('scoredBulk', { count: result.data.scored, defaultMessage: `Scored ${result.data.scored} leads` }))
+        result.data.results.forEach((row) => {
+          if (row.ok) {
+            patchLead(row.leadId, {
+              ai_score: row.score,
+              ai_verdict: row.verdict,
+              ai_angle: row.angle,
+            })
+          }
+        })
+      }
+      if (result.data.skipped > 0) {
+        toast.error(t('skippedBulk', { count: result.data.skipped, defaultMessage: `Skipped ${result.data.skipped} due to insufficient balance` }))
+      }
+      if (result.data.failed > 0) {
+        toast.error(t('failedBulk', { count: result.data.failed, defaultMessage: `Failed ${result.data.failed}` }))
+      }
+    } else {
+      toast.error(t('bulkScoreError', { defaultMessage: 'Bulk score failed' }))
+    }
+  }
 
   /**
    * Clears whatever the current filter shows — not the whole archive.
@@ -112,15 +151,30 @@ export function LeadsView() {
       </div>
 
       {visible.length > 0 ? (
-        <Button
-          variant={armed ? 'danger' : 'ghost'}
-          size="sm"
-          onClick={clearVisible}
-          className="w-full"
-        >
-          <Trash2 className="h-3.5 w-3.5" strokeWidth={2.3} />
-          {armed ? t('clearAllConfirm', { count: visible.length }) : t('clearAll')}
-        </Button>
+        <div className="flex gap-2">
+          {unscoredIds.length > 0 ? (
+            <Button
+              variant="ai"
+              size="sm"
+              onClick={() => void handleBulkScore()}
+              loading={scoringBulk}
+              className="flex-1 w-full"
+            >
+              <Sparkles className="h-3.5 w-3.5" strokeWidth={2.4} />
+              {t('scoreAll', { defaultMessage: 'Score All Unscored' })}
+              <span className="ml-1 opacity-70">({unscoredIds.length})</span>
+            </Button>
+          ) : null}
+          <Button
+            variant={armed ? 'danger' : 'ghost'}
+            size="sm"
+            onClick={() => void clearVisible()}
+            className={unscoredIds.length > 0 ? 'w-auto' : 'w-full'}
+          >
+            <Trash2 className="h-3.5 w-3.5" strokeWidth={2.3} />
+            {armed ? t('clearAllConfirm', { count: visible.length }) : t('clearAll')}
+          </Button>
+        </div>
       ) : null}
 
       {visible.length === 0 ? (

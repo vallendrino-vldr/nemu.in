@@ -19,11 +19,29 @@
     --surface: 40 40% 98%;
     --surface-raised: 0 0% 100%;
     --surface-sunken: 36 24% 91%;
+    /* The plane above a card: sheets, popovers, the spotlight field's
+       focused state. Light mode already tops out at white, so this one
+       separates itself with shadow rather than lightness. */
+    --surface-float: 0 0% 100%;
     --hairline: 32 18% 85%;
 
+    /* MEASURED, NOT EYEBALLED.
+       Every step below clears WCAG 4.5:1 against the *worst* surface in
+       this theme, checked with a contrast solver rather than by looking
+       at it. The old values (soft 38%, faint 56%) failed badly: faint on
+       a sunken well was 2.67:1, which is why small labels read as washed
+       out and cheap. */
     --ink: 24 18% 11%;
-    --ink-soft: 24 9% 38%;
-    --ink-faint: 26 8% 56%;
+    --ink-soft: 24 9% 30%;
+    --ink-faint: 26 8% 41%;
+
+    /* Text-safe accents. The brand ramps stay untouched for fills and
+       gradients, where contrast rules are different — but an accent used
+       as TEXT has to earn it, and ember-500 on white is only 2.87:1. */
+    --ink-ember: 26 92% 35%;
+    --ink-nila: 252 74% 50%;
+    --ink-pandan: 158 64% 28%;
+    --ink-sambal: 3 78% 45%;
 
     --sheen: 0 0% 100%;
     --void: 24 30% 10%;
@@ -73,19 +91,46 @@
 
     --shadow-ember-glow: 0 0 0 1px hsl(26 92% 51% / 0.35), 0 0 28px -4px hsl(26 92% 51% / 0.5);
 
+    /* The second accent's own light. God Mode and anything the AI made
+       are lit by this instead of by ember, so the two never compete for
+       the same meaning. */
+    --shadow-nila-glow: 0 0 0 1px hsl(252 74% 60% / 0.3), 0 0 26px -6px hsl(252 74% 60% / 0.45);
+    --shadow-nila-relief:
+      inset 0 1px 0 0 hsl(250 90% 88% / 0.85),
+      inset 0 -2px 2px 0 hsl(254 66% 30% / 0.35),
+      0 1px 2px 0 hsl(254 66% 34% / 0.25),
+      0 6px 14px -4px hsl(252 74% 52% / 0.38),
+      0 14px 30px -12px hsl(252 74% 52% / 0.4);
+
     --grain-opacity: 0.5;
   }
 
   .dark {
-    --canvas: 24 14% 6%;
-    --surface: 24 12% 9%;
-    --surface-raised: 26 11% 13%;
-    --surface-sunken: 24 16% 4%;
+    /* WIDENED LADDER.
+       These five used to be 4%, 6%, 9% and 13% — close enough that every
+       panel read as the same plane and the whole app looked flat, which
+       is most of what "warnanya ga menarik" was actually describing. The
+       gaps are now large enough to see: a well is visibly below the
+       floor, a card is visibly above it, and a sheet is above that.
+       Nothing bottoms out at pure black, which smears on OLED. */
+    --canvas: 24 16% 5%;
+    --surface: 24 13% 9%;
+    --surface-raised: 26 12% 15%;
+    --surface-sunken: 24 18% 3.5%;
+    --surface-float: 28 12% 19%;
     --hairline: 28 8% 20%;
 
     --ink: 36 34% 95%;
-    --ink-soft: 32 10% 66%;
-    --ink-faint: 30 7% 47%;
+    --ink-soft: 32 10% 76%;
+    --ink-faint: 30 7% 60%;
+
+    /* nila-500 as text on a raised dark card was 2.75:1 — the second
+       accent literally could not be read on the surface it was invented
+       for. Lifted to the 74% step for text use only. */
+    --ink-ember: 26 92% 51%;
+    --ink-nila: 252 74% 74%;
+    --ink-pandan: 158 64% 42%;
+    --ink-sambal: 3 78% 68%;
 
     --sheen: 36 44% 86%;
     --void: 0 0% 0%;
@@ -134,6 +179,14 @@
       inset 0 -1px 0 0 hsl(36 100% 70% / 0.25);
 
     --shadow-ember-glow: 0 0 0 1px hsl(26 92% 51% / 0.45), 0 0 36px -4px hsl(26 92% 51% / 0.65);
+
+    --shadow-nila-glow: 0 0 0 1px hsl(252 74% 60% / 0.4), 0 0 34px -5px hsl(252 74% 60% / 0.6);
+    --shadow-nila-relief:
+      inset 0 1px 0 0 hsl(250 90% 84% / 0.5),
+      inset 0 -2px 3px 0 hsl(254 66% 18% / 0.65),
+      0 1px 2px 0 hsl(var(--void) / 0.5),
+      0 8px 18px -5px hsl(252 74% 50% / 0.45),
+      0 18px 40px -14px hsl(252 74% 50% / 0.5);
 
     --grain-opacity: 0.34;
   }
@@ -256,6 +309,46 @@
 
   .overline {
     @apply text-overline font-semibold uppercase text-ink-faint;
+  }
+
+  /* ── Ambient light ────────────────────────────────────────────────
+     Two very low-alpha radial blobs drifting behind hero content — one
+     ember, one nila. This is the cheapest way to give a dark screen
+     depth without adding a single border: the eye reads the gradient as
+     a room with a light source in it rather than as a flat fill.
+
+     The stage clips them and sits behind everything (`isolate` + a
+     negative z-index on the children), so no blob can ever intercept a
+     tap. Both are pure CSS gradients — no image ships with this app. */
+  .ambient-stage {
+    @apply pointer-events-none absolute inset-0 isolate overflow-hidden;
+  }
+  .ambient-blob {
+    @apply pointer-events-none absolute -z-10 rounded-full blur-3xl;
+    will-change: transform;
+  }
+  .ambient-blob--ember {
+    background: radial-gradient(circle, hsl(26 92% 51% / 0.3) 0%, transparent 68%);
+  }
+  .ambient-blob--nila {
+    background: radial-gradient(circle, hsl(252 74% 60% / 0.26) 0%, transparent 68%);
+  }
+  /* Dark rooms have no ambient light of their own, so the blobs have to
+     carry more of it. Light mode only needs a hint or it looks washed. */
+  :root .ambient-blob {
+    opacity: 0.5;
+  }
+  .dark .ambient-blob {
+    opacity: 0.85;
+  }
+
+  /* A hairline that reads as light catching the top edge of a panel,
+     used where a full border would be too loud. */
+  .edge-nila {
+    box-shadow: inset 0 1px 0 0 hsl(252 74% 60% / 0.45);
+  }
+  .edge-ember {
+    box-shadow: inset 0 1px 0 0 hsl(26 92% 51% / 0.45);
   }
 
   /* ── Mapbox chrome, dressed in the app's own materials ────────────

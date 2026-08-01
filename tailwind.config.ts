@@ -31,10 +31,21 @@ const config: Config = {
         surface: 'hsl(var(--surface) / <alpha-value>)',
         'surface-raised': 'hsl(var(--surface-raised) / <alpha-value>)',
         'surface-sunken': 'hsl(var(--surface-sunken) / <alpha-value>)',
+        'surface-float': 'hsl(var(--surface-float) / <alpha-value>)',
         hairline: 'hsl(var(--hairline) / <alpha-value>)',
         ink: 'hsl(var(--ink) / <alpha-value>)',
         'ink-soft': 'hsl(var(--ink-soft) / <alpha-value>)',
         'ink-faint': 'hsl(var(--ink-faint) / <alpha-value>)',
+
+        /* Accents that are safe to set as TEXT.
+           The ember/nila/pandan/sambal ramps below stay as they are for
+           fills, gradients and glows. These four swap per theme so a
+           label never lands under 4.5:1 — use `text-ink-nila`, not
+           `text-nila-500`, whenever the colour carries words. */
+        'ink-ember': 'hsl(var(--ink-ember) / <alpha-value>)',
+        'ink-nila': 'hsl(var(--ink-nila) / <alpha-value>)',
+        'ink-pandan': 'hsl(var(--ink-pandan) / <alpha-value>)',
+        'ink-sambal': 'hsl(var(--ink-sambal) / <alpha-value>)',
 
         /* Ember — the brand. Copper heated just past the point of glowing. */
         ember: {
@@ -104,6 +115,8 @@ const config: Config = {
         'ember-glow': 'var(--shadow-ember-glow)',
         'ember-relief': 'var(--shadow-ember-relief)',
         'ember-pressed': 'var(--shadow-ember-pressed)',
+        'nila-glow': 'var(--shadow-nila-glow)',
+        'nila-relief': 'var(--shadow-nila-relief)',
         hairline: 'var(--shadow-hairline)',
       },
 
@@ -156,6 +169,17 @@ const config: Config = {
           '0%,100%': { opacity: '0.55' },
           '50%': { opacity: '1' },
         },
+        /* The two ambient blobs. Deliberately different periods and paths
+           so they never fall into lockstep — a light source that pulses
+           in time with another one reads as an animation, not as a room. */
+        'drift-a': {
+          '0%,100%': { transform: 'translate3d(0,0,0) scale(1)' },
+          '50%': { transform: 'translate3d(8%,6%,0) scale(1.14)' },
+        },
+        'drift-b': {
+          '0%,100%': { transform: 'translate3d(0,0,0) scale(1.06)' },
+          '50%': { transform: 'translate3d(-7%,-5%,0) scale(0.94)' },
+        },
       },
 
       animation: {
@@ -167,6 +191,8 @@ const config: Config = {
         shimmer: 'shimmer 1.9s infinite',
         'aurora-drift': 'aurora-drift 18s ease-in-out infinite',
         'ember-breathe': 'ember-breathe 3.4s ease-in-out infinite',
+        'drift-a': 'drift-a 22s ease-in-out infinite',
+        'drift-b': 'drift-b 29s ease-in-out infinite',
       },
 
       transitionTimingFunction: {

@@ -105,7 +105,7 @@ export default async function LandingPage({
           ].map((step, index) => (
             <Panel key={step.title} pad="lg" className="flex flex-col gap-4">
               <div className="flex items-center gap-3">
-                <span className="grid h-10 w-10 place-items-center rounded-well bg-surface-sunken text-ember-500 shadow-well">
+                <span className="grid h-10 w-10 place-items-center rounded-well bg-surface-sunken text-ink-ember shadow-well">
                   <step.icon className="h-[18px] w-[18px]" strokeWidth={2.3} />
                 </span>
                 <span className="font-mono text-[0.6875rem] font-bold tabular text-ink-faint">
@@ -190,7 +190,7 @@ export default async function LandingPage({
         <div className="grid gap-5 lg:grid-cols-[0.9fr_1.1fr]">
           <Panel pad="lg" className="flex flex-col justify-between gap-6">
             <div>
-              <p className="font-display text-display-lg leading-none text-ember-500">
+              <p className="font-display text-display-lg leading-none text-ink-ember">
                 {SIGNUP_BONUS}
               </p>
               <p className="mt-3 text-[0.9375rem] font-semibold text-ink">
@@ -239,7 +239,7 @@ export default async function LandingPage({
       <footer className="border-t border-hairline">
         <div className="container flex flex-col items-center gap-2 py-10 text-center">
           <p className="font-display text-lg text-ink">
-            Nemu<span className="text-ember-500">.in</span>
+            Nemu<span className="text-ink-ember">.in</span>
           </p>
           <p className="text-[0.75rem] text-ink-faint">Mesin Pencari Klien, Bukan Alasan.</p>
         </div>

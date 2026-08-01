@@ -54,5 +54,10 @@ export const useCreditStore = create<CreditState>((set, get) => ({
     set((state) => ({ bursts: state.bursts.filter((burst) => burst.id !== id) })),
 }))
 
-/** Super admins spend nothing, so the meter should never read as depleting. */
+/**
+ * Super admins normally spend nothing, so the meter should not read as
+ * depleting. This does NOT account for God Mode's "bill me like a user"
+ * switch, which lives on the profile row rather than in this store —
+ * components that care pass `billed` explicitly (see CreditMeter).
+ */
 export const selectIsUnlimited = (state: CreditState) => state.role === 'super_admin'

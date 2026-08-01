@@ -25,7 +25,10 @@ export function ProfileView({ profile }: { profile: Profile }) {
   const leads = React.useMemo(() => sellableOf(allLeads), [allLeads])
   const waReady = leads.filter((lead) => lead.contact_tier === 'whatsapp').length
 
-  const unlimited = profile.role === 'super_admin'
+  // An admin who has flipped God Mode's tester switch is billed like
+  // anyone else, so showing them `∞` would be a lie about their own
+  // account — and the switch exists precisely so the number moves.
+  const unlimited = profile.role === 'super_admin' && !profile.bill_admin
 
   return (
     <div className="space-y-4">
@@ -78,7 +81,7 @@ export function ProfileView({ profile }: { profile: Profile }) {
             <li key={action} className="flex items-center justify-between gap-3 py-2.5">
               <span className="text-[0.8125rem] text-ink">{tCredits(`actions.${action}`)}</span>
               <span className="flex items-center gap-1 font-mono text-[0.8125rem] font-bold tabular text-ink-soft">
-                <Zap className="h-3 w-3 text-ember-500" fill="currentColor" />
+                <Zap className="h-3 w-3 text-ink-ember" fill="currentColor" />
                 {cost}
               </span>
             </li>

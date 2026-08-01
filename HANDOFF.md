@@ -71,6 +71,27 @@ Semua ini diuji terhadap produksi, bukan asumsi:
 - Google Places: 10 hasil → 8 punya nomor HP siap-WA
 - `/auth/callback` mengembalikan 307 (dulu 404)
 
+**God Mode (migrasi 0005)** — diuji langsung ke database produksi lewat
+blok transaksi yang di-*rollback*, jadi tidak ada data uji yang tertinggal
+(sudah diverifikasi: nol kunci sisa, nol peringatan sisa, saldo utuh):
+
+| Yang diuji | Hasil |
+|---|---|
+| `god_stats()` sekali panggil | 19 angka dalam satu putaran (dulu 4 query, ±7 detik) |
+| Sakelar penguji **mati** | dipotong 0, `was_free=true` |
+| Sakelar penguji **hidup** | dipotong 3, `was_free=false` |
+| Ban sesama Super Admin | ditolak, `CANNOT_BAN_ADMIN` |
+| Akun kena ban lalu belanja | ditolak, `ACCOUNT_BANNED` |
+| Kunci API dibaca dari UI | tersamar `AIzaSy••••JKLM`, rahasianya tidak pernah keluar |
+| Non-admin panggil 5 fungsi God | kelimanya `FORBIDDEN` |
+| `anon` panggil fungsi God | tidak satu pun bisa |
+| User update kolom sendiri | hanya `full_name, avatar_url, locale, last_seen_at, notice` |
+
+Yang **belum** diverifikasi: tampilan dua layar setelah login (Berburu baru
+dan `/god`) belum pernah dilihat ter-render, karena masuk butuh sandi
+pemilik dan agen tidak boleh mengetiknya. Build dan typecheck bersih, dan
+lapisan datanya sudah dibuktikan di atas — tapi mata manusia belum lihat.
+
 ---
 
 ## 4. EMPAT JEBAKAN — ini yang paling mahal untuk ditemukan ulang
@@ -121,6 +142,30 @@ Brave menolak WebGL → cobe melempar error → seluruh halaman mati.
 Apa pun yang sifatnya dekoratif dibungkus `SafeWidget`. Langganan
 realtime juga gagal-lunak: browser keras memblokir WebSocket pihak ketiga.
 
+### 4.6 Kolom keluaran bernama `id` bikin fungsi meledak saat dipanggil
+`admin_list_api_keys()` dan `god_recent_activity()` sama-sama punya kolom
+keluaran bernama `id`. Di dalam badannya, penjaga super_admin ditulis
+`where id = auth.uid()` — dan `id` itu ambigu antara kolom keluaran dan
+`profiles.id`.
+
+Postgres **menerima definisinya tanpa keluhan** lalu melempar 42702 baru
+saat fungsinya benar-benar dipanggil. Artinya migrasi terlihat sukses,
+tes "apakah fungsinya ada" lolos, dan barangnya tetap rusak. Ini cuma
+ketahuan karena fungsinya benar-benar dieksekusi.
+
+**Aturan:** di fungsi `returns table (...)`, selalu beri alias tabel di
+setiap query internal — `where pr.id = auth.uid()`, bukan `where id = ...`.
+
+### 4.7 `next/link` biasa membuang awalan bahasa
+`localePrefix: 'as-needed'`, jadi bahasa Inggris hidup di `/en/...` dan
+Indonesia di akar. Memakai `Link` dari `next/link` menghasilkan href
+mentah, sehingga pengguna berbahasa Inggris yang menekan tombol admin
+mendarat di `/god` (Indonesia), bukan `/en/god`.
+
+**Aturan:** selalu `import { Link, redirect } from '@/i18n/routing'`.
+Catatan: `redirect` dari next-intl **tidak** bertipe `never`, jadi
+TypeScript tidak menyempitkan tipe setelahnya — butuh `return` eksplisit.
+
 ---
 
 ## 5. Keputusan produk yang lahir dari data lapangan
@@ -142,44 +187,60 @@ terbatas dan cache membuat pencarian berulang gratis.
 
 ## 6. PEKERJAAN BERIKUTNYA — prioritas pemilik
 
-### 6.0 God Mode: pisahkan halaman & beri kekuatan penuh (BESAR)
-Pemilik ingin: masuk seperti pengguna biasa, lalu satu ikon admin membuka
-**halaman terpisah** dengan kekuatan penuh. Saat ini God Mode adalah tab
-biasa yang isinya minim.
+### 6.0 God Mode — SELESAI (1 Agustus 2026)
+Sekarang rute sendiri di `/god`, bukan tab lagi. Masuk lewat tombol
+perisai nila di header aplikasi; tab bar turun dari lima jadi empat slot
+untuk semua orang.
 
-Yang diminta: hapus akun user, ban, kirim peringatan, tambah/ganti API
-key Gemini dari UI, dan saldo admin yang terlihat serta bisa
-ditambah/dikurangi sendiri (pemilik memakai akunnya sendiri sebagai
-penguji, jadi dia perlu melihat kredit benar-benar berkurang).
+Yang sudah jalan: hapus akun (harus mengetik emailnya), ban & buka ban,
+kirim peringatan yang muncul di layar user lewat realtime, kelola kunci
+Gemini dari UI, saldo admin yang bisa dinaikkan/diturunkan sendiri, rem
+darurat, pengumuman global, dan feed aktivitas. Bukti pengujiannya di §3.
 
-Catatan performa: membuka tab God bisa makan 7 detik karena
-`loadGodStats` menjalankan empat agregat sekaligus. Pindahkan ke satu
-RPC Postgres, atau muat bertahap.
+Dua keputusan desain yang perlu diketahui penerus:
+- **`api_keys` sengaja RLS aktif tanpa satu pun policy.** Itu artinya
+  hanya `service_role` yang bisa membacanya. Linter Supabase akan
+  menandainya INFO selamanya — itu memang desainnya, jangan "diperbaiki"
+  dengan menambah policy.
+- **Rotasi kunci di-cache 60 detik per instans.** Kunci yang dimatikan di
+  konsol berhenti dipakai dalam waktu ±1 menit, bukan seketika. Untuk
+  "stop sekarang juga", rem daruratnya yang instan.
 
-Catatan desain: kredit admin sekarang tampil `∞` dan tidak pernah
-berkurang (`consume_credits` mem-bypass super_admin). Untuk mode
-penguji, tambahkan sakelar "tagih saya seperti user biasa".
+Sisa yang belum: `GEMINI_API_KEY_*` di Vercel masih jadi cadangan. Kalau
+semua kunci sudah dipindah ke UI, variabel itu bisa dihapus.
 
-### 6.1 Rombak visual dashboard (PALING MENDESAK)
-Penilaian pemilik, kata-katanya sendiri: *"berantakan, murahan, ga
-berkelas, ga fresh, ga profesional, terlalu generik, AI SLOP, warnanya
-ga menarik"* — dan dia **tidak pede mempublikasikannya**.
+### 6.1 Rombak visual dashboard — SELESAI putaran pertama (1 Agustus 2026)
+Penilaian pemilik sebelumnya: *"berantakan, murahan, ga berkelas, ga
+fresh, ga profesional, terlalu generik, AI SLOP, warnanya ga menarik"*.
 
-Ini penilaian yang sah. Tab Berburu saat ini hanyalah tumpukan kolom
-input di atas satu panel abu-abu besar. Tidak ada hierarki, tidak ada
-momen, tidak ada kepribadian.
+Dikerjakan lewat skill `ui-ux-pro-max` (arah gaya) dan `superdesign`
+(draft di canvas), lalu diimplementasikan:
+- Layar Berburu sekarang **dibuka oleh angka**, bukan formulir: berapa
+  lead siap-WA yang menunggu, berapa total, berapa belum disentuh.
+- Tiga kolom input jadi **satu kolom Spotlight**. `parseSpotlight()` di
+  `src/lib/spotlight.ts` memecah "kedai kopi di Jogja" pakai " di "
+  **terakhir**, dan hasil pecahannya ditampilkan sebagai chip supaya
+  pengguna tidak menebak apa yang akan dicari. Radius & lokasi turun jadi
+  kontrol sekunder yang bisa dilipat.
+- Tangga permukaan mode gelap **dilebarkan** — dulu 4/6/9/13% terlalu
+  rapat sehingga semua panel terlihat sebidang. Sekarang
+  3.5/5/9/15/19% plus `--surface-float` yang baru.
+- **Aksen kedua**: nila (252 74% 60%) sekarang punya pekerjaan sendiri —
+  segala yang berbau AI dan seluruh chrome God Mode. Ember tetap untuk
+  aksi & uang. Pandan/sambal murni status.
+- Cahaya ambient: dua gumpalan radial (ember + nila) hanyut pelan di
+  belakang hero. Murni CSS, tetap nol berkas gambar.
+- Riwayat sapuan disimpan di localStorage (gratis, per-perangkat).
 
-Arah yang disarankan (pakai skill `ui-ux-pro-max` dan `superdesign`,
-jangan mendesain dari asumsi):
-- Beri dashboard sebuah **layar pembuka yang hidup** — bukan formulir.
-  Angka besar: berapa lead siap-WA yang menunggu, berapa yang belum
-  disentuh hari ini.
-- Sapuan harus terasa seperti **satu tindakan besar**, bukan tiga kolom.
-  Pertimbangkan satu kolom pencarian ala Spotlight + saran cepat
-  ("kedai kopi di Jogja", "bengkel di Bekasi").
-- Palet ember/obsidian sekarang terlalu rata di mode gelap. Butuh satu
-  warna aksen kedua dan permukaan yang lebih bertingkat.
-- Kartu lead adalah produk sesungguhnya — beri dia kelas, bukan panel.
+Berkas desain yang ditinggalkan untuk sesi berikutnya:
+- `.superdesign/design-system.md` — **sumber kebenaran visual.** Berisi
+  peran tiap warna, batasan keras, dan alasan tiap keputusan.
+- `.superdesign/init/` — konteks repo untuk skill superdesign.
+- Canvas draft: cari lewat `npx @superdesign/cli@latest` (project
+  "Nemu.in — Dashboard & God Mode").
+
+Belum dikerjakan di putaran ini: **kartu lead** masih panel biasa, padahal
+dia produk sesungguhnya. Tab Arsip juga belum dirombak (lihat §6.4).
 
 ### 6.2 Google OAuth masih mati
 Client Secret di dashboard Supabase salah. **Kredensial pemilik sendiri
@@ -257,13 +318,22 @@ src/
 │   ├── gemini.ts     dua key + jeda; 400 → ulang tanpa thinkingConfig
 │   ├── credits.ts    penjaga kredit (wasFree mencegah cetak kredit)
 │   └── ghost-canvas.ts  Website Hantu → PNG, tanpa library
+│   └── spotlight.ts  pecah "kedai kopi di Jogja" + riwayat sapuan
 ├── components/
-│   ├── app-shell.tsx    shell native, tab client-side
+│   ├── app-shell.tsx    shell native, 4 tab + tombol admin di header
 │   ├── safe-widget.tsx  blast door untuk komponen dekoratif
+│   ├── user-notice.tsx  peringatan admin, lewat realtime
+│   ├── god/             konsol admin: shell, overview, users, keys,
+│   │                    system, activity — ruangan terpisah, aksen nila
 │   └── views/           satu file per tab
+├── app/[locale]/god/    rute God Mode (peran dibaca ulang dari database)
 └── store/lead-store.ts  BACA CATATAN DI ATASNYA sebelum menyentuh
 
 supabase/migrations/  0001 fondasi · 0003 cache · 0004 penguncian fungsi
+                      0005 God Mode (ban, peringatan, kunci API,
+                      sakelar penguji, god_stats satu putaran)
+
+.superdesign/         design-system.md = sumber kebenaran visual
 ```
 
 ---
