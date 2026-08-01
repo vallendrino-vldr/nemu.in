@@ -85,7 +85,11 @@
       "emailTaken": "Email ini udah kedaftar. Coba masuk aja.",
       "rateLimited": "Udah kebanyakan bikin akun dari koneksi ini hari ini. Coba lagi besok.",
       "unknown": "Ada yang macet. Coba sekali lagi."
-    }
+    },
+    "showPassword": "Tampilkan sandi",
+    "hidePassword": "Sembunyikan sandi",
+    "googleMisconfigured": "Login Google belum aktif — Client Secret di Supabase salah. Pakai email & sandi dulu.",
+    "googleGeneric": "Login Google gagal di tengah jalan. Pakai email & sandi dulu."
   },
   "hunt": {
     "title": "Mau berburu di mana?",

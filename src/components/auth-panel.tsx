@@ -4,7 +4,7 @@ import * as React from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { AnimatePresence, motion } from 'framer-motion'
-import { ArrowRight, Mail } from 'lucide-react'
+import { ArrowRight, Eye, EyeOff, Mail } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import { Field, Panel } from '@/components/ui/primitives'
@@ -33,6 +33,7 @@ export function AuthPanel({ className, id }: { className?: string; id?: string }
   const [name, setName] = React.useState('')
   const [error, setError] = React.useState<FailureCode | null>(null)
   const [busy, setBusy] = React.useState(false)
+  const [showPassword, setShowPassword] = React.useState(false)
 
   const submit = async (event: React.FormEvent) => {
     event.preventDefault()
@@ -65,6 +66,29 @@ export function AuthPanel({ className, id }: { className?: string; id?: string }
     setMode(next)
     setError(null)
   }
+
+  /**
+   * The OAuth callback bounces failures back here as query params. Without
+   * this the user is simply returned to the landing page with no
+   * explanation — "it just kicks me back" — and has no way to tell a
+   * misconfigured provider from their own mistake.
+   */
+  const [providerError, setProviderError] = React.useState<string | null>(null)
+
+  React.useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    if (params.get('auth') !== 'failed') return
+
+    const reason = params.get('reason') ?? params.get('error_description') ?? ''
+    setProviderError(
+      /invalid_client|client secret/i.test(reason)
+        ? t('googleMisconfigured')
+        : reason || t('googleGeneric'),
+    )
+
+    // Clear the params so a refresh does not resurrect a stale banner.
+    window.history.replaceState({}, '', window.location.pathname + window.location.hash)
+  }, [t])
 
   return (
     <Panel id={id} pad="lg" className={cn('space-y-5', className)}>
@@ -103,30 +127,59 @@ export function AuthPanel({ className, id }: { className?: string; id?: string }
 
         <label className="block space-y-1.5">
           <span className="overline">{t('emailLabel')}</span>
+          {/*
+            Normalised as it is typed. A trailing space from a paste, or a
+            capitalised domain, would otherwise silently create a second
+            account that looks identical to the first in the UI.
+          */}
           <Field
             type="email"
             value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            onChange={(e) => setEmail(e.target.value.replace(/\s+/g, '').toLowerCase())}
             placeholder="kamu@email.com"
             autoComplete="email"
             inputMode="email"
             enterKeyHint="next"
+            spellCheck={false}
+            autoCapitalize="none"
             required
           />
         </label>
 
         <label className="block space-y-1.5">
           <span className="overline">{t('passwordLabel')}</span>
-          <Field
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder={t('passwordPlaceholder')}
-            autoComplete={mode === 'signin' ? 'current-password' : 'new-password'}
-            enterKeyHint="go"
-            minLength={8}
-            required
-          />
+          {/*
+            The reveal toggle is not a nicety. A typo'd address and an
+            unreadable password field is how someone ends up locked out
+            of an account they are certain they typed correctly — which
+            is exactly what happened here.
+          */}
+          <div className="relative">
+            <Field
+              type={showPassword ? 'text' : 'password'}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder={t('passwordPlaceholder')}
+              autoComplete={mode === 'signin' ? 'current-password' : 'new-password'}
+              enterKeyHint="go"
+              minLength={8}
+              required
+              className="pr-12"
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword((visible) => !visible)}
+              aria-label={showPassword ? t('hidePassword') : t('showPassword')}
+              aria-pressed={showPassword}
+              className="absolute right-1.5 top-1/2 grid h-9 w-9 -translate-y-1/2 place-items-center rounded-chip text-ink-faint transition-colors hover:text-ink active:bg-surface"
+            >
+              {showPassword ? (
+                <EyeOff className="h-4 w-4" strokeWidth={2.2} />
+              ) : (
+                <Eye className="h-4 w-4" strokeWidth={2.2} />
+              )}
+            </button>
+          </div>
         </label>
 
         <AnimatePresence>
@@ -164,6 +217,12 @@ export function AuthPanel({ className, id }: { className?: string; id?: string }
         </span>
         <span className="h-px flex-1 bg-hairline" />
       </div>
+
+      {providerError ? (
+        <p className="rounded-chip bg-ember-500/12 px-3 py-2 text-[0.75rem] leading-relaxed text-ember-700 dark:text-ember-300">
+          {providerError}
+        </p>
+      ) : null}
 
       <form action={signInWithGoogle.bind(null, '/dashboard')}>
         <Button type="submit" variant="surface" size="md" className="w-full">

@@ -85,7 +85,11 @@
       "emailTaken": "That email is already registered. Try signing in.",
       "rateLimited": "Too many accounts created from this connection today. Try tomorrow.",
       "unknown": "Something jammed. Give it one more go."
-    }
+    },
+    "showPassword": "Show password",
+    "hidePassword": "Hide password",
+    "googleMisconfigured": "Google sign-in isn't set up — the Client Secret in Supabase is wrong. Use email and password for now.",
+    "googleGeneric": "Google sign-in dropped halfway. Use email and password for now."
   },
   "hunt": {
     "title": "Where are we hunting?",
