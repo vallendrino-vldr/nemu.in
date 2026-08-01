@@ -178,6 +178,10 @@ export type Database = {
         Args: { p_query_hash: string }
         Returns: undefined
       }
+      claim_signup_slot: {
+        Args: { p_ip_hash: string; p_email: string; p_limit?: number; p_window?: string }
+        Returns: boolean
+      }
     }
     Enums: {
       account_role: AccountRole

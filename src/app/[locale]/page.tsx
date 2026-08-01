@@ -5,9 +5,9 @@ import { Link } from '@/i18n/routing'
 import { Button } from '@/components/ui/button'
 import { Badge, Eyebrow, Panel } from '@/components/ui/primitives'
 import { Globe } from '@/components/globe'
+import { AuthPanel } from '@/components/auth-panel'
 import { SiteHeader } from '@/components/site-header'
 import { getSessionProfile } from '@/lib/supabase/server'
-import { signInWithGoogle } from '@/actions/auth'
 import { CREDIT_COST, SIGNUP_BONUS } from '@/lib/pricing'
 import type { Profile } from '@/lib/database.types'
 
@@ -59,12 +59,12 @@ export default async function LandingPage({
                   </Link>
                 </Button>
               ) : (
-                <form action={signInWithGoogle.bind(null, '/dashboard')}>
-                  <Button type="submit" variant="primary" size="lg">
+                <Button variant="primary" size="lg" asChild>
+                  <a href="#masuk">
                     {t('ctaPrimary')}
                     <ArrowRight className="h-4 w-4" strokeWidth={2.5} />
-                  </Button>
-                </form>
+                  </a>
+                </Button>
               )}
 
               <Button variant="surface" size="lg" asChild>
@@ -75,8 +75,11 @@ export default async function LandingPage({
             <p className="mt-5 text-[0.8125rem] leading-relaxed text-ink-faint">{t('trust')}</p>
           </div>
 
+          {/* Signed out, the hero's second column is the way in. Signed
+              in, it goes back to being the globe. A login form the user
+              has to scroll for is a login form they do not use. */}
           <div className="relative mx-auto w-full max-w-md lg:max-w-none">
-            <Globe />
+            {profile ? <Globe /> : <AuthPanel className="scroll-mt-24" id="masuk" />}
           </div>
         </div>
       </section>
@@ -192,11 +195,9 @@ export default async function LandingPage({
               </p>
             </div>
             {!profile ? (
-              <form action={signInWithGoogle.bind(null, '/dashboard')}>
-                <Button type="submit" variant="primary" size="md" className="w-full">
-                  {t('ctaPrimary')}
-                </Button>
-              </form>
+              <Button variant="primary" size="md" className="w-full" asChild>
+                <a href="#masuk">{t('ctaPrimary')}</a>
+              </Button>
             ) : null}
           </Panel>
 

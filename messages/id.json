@@ -63,7 +63,29 @@
     "google": "Lanjut pakai Google",
     "welcomeBonus": "Akun baru dapat 30 kredit langsung.",
     "failed": "Login-nya gagal di tengah jalan. Coba sekali lagi ya.",
-    "signingIn": "Lagi nyiapin ruang burumu…"
+    "signingIn": "Lagi nyiapin ruang burumu…",
+    "signInTitle": "Masuk",
+    "signUpTitle": "Bikin akun",
+    "signInBody": "Masukin email sama sandi, langsung kepake.",
+    "signUpBody": "Gratis. Begitu jadi, kamu langsung dapat 30 kredit.",
+    "nameLabel": "Nama",
+    "namePlaceholder": "Nama panggilan aja",
+    "emailLabel": "Email",
+    "passwordLabel": "Sandi",
+    "passwordPlaceholder": "Minimal 8 karakter",
+    "signInCta": "Masuk",
+    "signUpCta": "Bikin akun & mulai",
+    "toSignUp": "Belum punya akun? Bikin sekarang",
+    "toSignIn": "Udah punya akun? Masuk aja",
+    "or": "atau",
+    "err": {
+      "badCredentials": "Email atau sandinya nggak cocok. Coba cek lagi.",
+      "badEmail": "Format emailnya belum bener.",
+      "weakPassword": "Sandinya kependekan — minimal 8 karakter ya.",
+      "emailTaken": "Email ini udah kedaftar. Coba masuk aja.",
+      "rateLimited": "Udah kebanyakan bikin akun dari koneksi ini hari ini. Coba lagi besok.",
+      "unknown": "Ada yang macet. Coba sekali lagi."
+    }
   },
   "hunt": {
     "title": "Mau berburu di mana?",
@@ -213,7 +235,9 @@
     "emptyTitle": "Petanya masih kosong.",
     "emptyBody": "Sisir satu daerah dulu di tab Berburu, nanti hasilnya muncul di sini sebagai titik.",
     "selected": "Lead terpilih",
-    "clear": "Tutup"
+    "clear": "Tutup",
+    "unavailableTitle": "Peta belum bisa dibuka.",
+    "unavailableBody": "Token peta belum terpasang di server. Cek NEXT_PUBLIC_MAPBOX_TOKEN."
   },
   "leads": {
     "filterAll": "Semua",

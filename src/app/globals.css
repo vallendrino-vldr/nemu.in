@@ -1,4 +1,4 @@
-@import 'leaflet/dist/leaflet.css';
+@import 'mapbox-gl/dist/mapbox-gl.css';
 
 @tailwind base;
 @tailwind components;
@@ -258,65 +258,56 @@
     @apply text-overline font-semibold uppercase text-ink-faint;
   }
 
-  /* ── Leaflet, dressed in the app's own materials ──────────────────
-     The stock stylesheet ships white boxes with 4px corners and a blue
-     focus ring. Left alone it reads as a third-party widget dropped into
-     the page, which is exactly the "AI slop" tell this project avoids. */
-  .leaflet-container {
-    background: hsl(var(--surface-sunken)) !important;
-    font-family: inherit !important;
-    /* Leaflet's default outline survives our reset and looks foreign. */
-    outline: none !important;
-  }
-
-  .leaflet-control-zoom {
+  /* ── Mapbox chrome, dressed in the app's own materials ────────────
+     Mapbox ships white boxes with 4px corners and its own blue focus
+     ring. Left alone the controls read as a third-party widget dropped
+     into the page — the exact "generic embed" tell this project avoids.
+     The tiles themselves are re-tinted at runtime in map-view.tsx. */
+  .mapboxgl-ctrl-group {
+    background: hsl(var(--surface-raised)) !important;
     border: none !important;
-    box-shadow: var(--shadow-relief) !important;
     border-radius: theme('borderRadius.chip') !important;
+    box-shadow: var(--shadow-relief) !important;
     overflow: hidden;
   }
-
-  .leaflet-control-zoom a {
-    background: hsl(var(--surface-raised)) !important;
-    color: hsl(var(--ink)) !important;
-    border-color: hsl(var(--hairline)) !important;
+  .mapboxgl-ctrl-group button {
     width: 34px !important;
     height: 34px !important;
-    line-height: 34px !important;
-    font-size: 17px !important;
+    background: transparent !important;
+    border-color: hsl(var(--hairline)) !important;
     transition: background-color 150ms;
   }
-  .leaflet-control-zoom a:hover {
+  .mapboxgl-ctrl-group button:hover {
     background: hsl(var(--surface-sunken)) !important;
   }
-  .leaflet-control-zoom a:active {
+  .mapboxgl-ctrl-group button:active {
     box-shadow: var(--shadow-pressed) !important;
   }
+  /* The control glyphs are inline SVG data URIs and always ship black,
+     so they vanish on the dark theme without this. */
+  .dark .mapboxgl-ctrl-group button .mapboxgl-ctrl-icon {
+    filter: invert(1) brightness(1.6);
+  }
 
-  .leaflet-control-attribution {
+  .mapboxgl-ctrl-attrib {
     background: hsl(var(--surface-raised) / 0.82) !important;
-    color: hsl(var(--ink-faint)) !important;
-    font-size: 9px !important;
-    padding: 2px 6px !important;
-    border-radius: 999px 0 0 0 !important;
+    border-radius: 999px !important;
     backdrop-filter: blur(8px);
   }
-  .leaflet-control-attribution a {
-    color: hsl(var(--ink-soft)) !important;
+  .mapboxgl-ctrl-attrib,
+  .mapboxgl-ctrl-attrib a {
+    color: hsl(var(--ink-faint)) !important;
+    font-size: 9px !important;
+  }
+  .mapboxgl-ctrl-attrib-button {
+    filter: invert(var(--attrib-invert, 0));
+  }
+  .dark .mapboxgl-ctrl-attrib-button {
+    --attrib-invert: 1;
   }
 
-  .leaflet-tooltip {
-    background: hsl(var(--surface-raised)) !important;
-    color: hsl(var(--ink)) !important;
-    border: none !important;
-    border-radius: theme('borderRadius.chip') !important;
-    box-shadow: var(--shadow-floating) !important;
-    font-size: 11px !important;
-    font-weight: 600 !important;
-    padding: 5px 9px !important;
-  }
-  .leaflet-tooltip-top::before {
-    border-top-color: hsl(var(--surface-raised)) !important;
+  .mapboxgl-canvas:focus {
+    outline: none;
   }
 }
 

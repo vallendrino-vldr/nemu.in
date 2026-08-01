@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button'
 import { CreditMeter } from '@/components/credit-meter'
 import { ThemeToggle } from '@/components/theme-toggle'
 import { LocaleSwitch } from '@/components/locale-switch'
-import { signInWithGoogle, signOut } from '@/actions/auth'
+import { signOut } from '@/actions/auth'
 import type { Profile } from '@/lib/database.types'
 
 /**
@@ -59,11 +59,9 @@ export async function SiteHeader({ profile }: { profile: Profile | null }) {
           <>
             <LocaleSwitch className="hidden sm:inline-flex" />
             <ThemeToggle />
-            <form action={signInWithGoogle.bind(null, '/dashboard')}>
-              <Button type="submit" variant="primary" size="sm">
-                {t('signIn')}
-              </Button>
-            </form>
+            <Button variant="primary" size="sm" asChild>
+              <Link href="/#masuk">{t('signIn')}</Link>
+            </Button>
           </>
         )}
       </div>

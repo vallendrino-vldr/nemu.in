@@ -63,7 +63,29 @@
     "google": "Continue with Google",
     "welcomeBonus": "New accounts start with 30 credits.",
     "failed": "The sign-in dropped halfway. Give it one more go.",
-    "signingIn": "Setting up your hunt room…"
+    "signingIn": "Setting up your hunt room…",
+    "signInTitle": "Sign in",
+    "signUpTitle": "Create account",
+    "signInBody": "Enter your email and password, and you're in.",
+    "signUpBody": "Free. You start with 30 credits the moment it's made.",
+    "nameLabel": "Name",
+    "namePlaceholder": "Whatever you go by",
+    "emailLabel": "Email",
+    "passwordLabel": "Password",
+    "passwordPlaceholder": "At least 8 characters",
+    "signInCta": "Sign in",
+    "signUpCta": "Create account & start",
+    "toSignUp": "No account yet? Create one",
+    "toSignIn": "Already have an account? Sign in",
+    "or": "or",
+    "err": {
+      "badCredentials": "That email and password don't match. Check them again.",
+      "badEmail": "That email doesn't look right.",
+      "weakPassword": "Password is too short — 8 characters minimum.",
+      "emailTaken": "That email is already registered. Try signing in.",
+      "rateLimited": "Too many accounts created from this connection today. Try tomorrow.",
+      "unknown": "Something jammed. Give it one more go."
+    }
   },
   "hunt": {
     "title": "Where are we hunting?",
@@ -213,7 +235,9 @@
     "emptyTitle": "Nothing on the map yet.",
     "emptyBody": "Sweep an area from the Hunt tab and every result shows up here as a pin.",
     "selected": "Selected lead",
-    "clear": "Close"
+    "clear": "Close",
+    "unavailableTitle": "Map can't load.",
+    "unavailableBody": "The map token isn't configured on the server. Check NEXT_PUBLIC_MAPBOX_TOKEN."
   },
   "leads": {
     "filterAll": "All",

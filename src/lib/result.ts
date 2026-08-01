@@ -12,6 +12,13 @@ export type FailureCode =
   | 'empty'
   | 'not_found'
   | 'forbidden'
+  /* Sign-in and sign-up. Deliberately distinct so the form can say the
+     one true thing instead of a generic "something went wrong". */
+  | 'bad_credentials'
+  | 'bad_email'
+  | 'weak_password'
+  | 'email_taken'
+  | 'rate_limited'
   | 'unknown'
 
 export interface Failure {

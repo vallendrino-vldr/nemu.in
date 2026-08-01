@@ -25,3 +25,6 @@ next-env.d.ts
 .agents/
 .claude/
 skills-lock.json
+
+# Vercel env bundle — contains secrets, never commit
+VERCEL-ENV-IMPORT.txt
